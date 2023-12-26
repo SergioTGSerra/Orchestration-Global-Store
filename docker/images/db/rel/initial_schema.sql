@@ -58,7 +58,7 @@ CREATE TABLE public.customers (
 	uuid			uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
 	name			VARCHAR(250) NOT NULL,
 	segment			uuid REFERENCES public.segments(uuid) ON DELETE CASCADE NOT NULL,
-	zip_code		VARCHAR(250) NOT NULL,
+	postal_code		VARCHAR(250) NOT NULL,
 	city			VARCHAR(250) NOT NULL,
 	state			uuid REFERENCES public.states(uuid) ON DELETE CASCADE NOT NULL,
 	country			uuid REFERENCES public.countries(uuid) ON DELETE CASCADE NOT NULL,
@@ -78,13 +78,14 @@ CREATE TABLE public.orders (
     uuid       uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_date TIMESTAMP NOT NULL DEFAULT NOW(),
     ship_date  TIMESTAMP NOT NULL DEFAULT NOW(),
+	ship_mode  uuid REFERENCES public.ship_modes(uuid) ON DELETE CASCADE NOT NULL,
+	shipping_cost REAL NOT NULL,
     customer   uuid REFERENCES public.customers(uuid) ON DELETE CASCADE NOT NULL,
     priority   uuid REFERENCES public.priorities(uuid) ON DELETE CASCADE NOT NULL,
-    ship_mode  uuid REFERENCES public.ship_modes(uuid) ON DELETE CASCADE NOT NULL,
+	market     uuid REFERENCES public.markets(uuid) ON DELETE CASCADE NOT NULL,
     create_on  TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_on TIMESTAMP NOT NULL DEFAULT NOW()
 );
-
 
 CREATE TABLE public.order_products (
     order_uuid   uuid REFERENCES public.orders(uuid) ON DELETE CASCADE,
