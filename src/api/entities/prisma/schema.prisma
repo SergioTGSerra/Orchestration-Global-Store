@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs https//pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  relationMode = "foreignKeys"
+  extensions = [uuidOssp(map: "uuid-ossp"), postgis, postgis_topology]
+}
+
+model Teacher {
+  name    String  @id
+  city    String
+  created_on      DateTime @default(now())
+  updated_on      DateTime @default(now())
+}
+
+model Market {
+  uuid       String   @id  @db.Uuid
+  name       String   @unique
+  region     String
+  create_on  DateTime @default(now())
+  updated_on DateTime @default(now())
+  Orders Order[]
+}
+
+model ShipMode {
+  uuid       String   @id  @db.Uuid
+  name       String   @unique
+  create_on  DateTime @default(now())
+  updated_on DateTime @default(now())
+  Orders Order[]
+}
+
+model Priority {
+  uuid       String   @id  @db.Uuid
+  name       String   @unique
+  create_on  DateTime @default(now())
+  updated_on DateTime @default(now())
+  Orders Order[]
+}
+
+model Segment {
+  uuid       String   @id  @db.Uuid
+  name       String   @unique
+  create_on  DateTime @default(now())
+  updated_on DateTime @default(now())
+  Customers Customer[]
+}
+
+model Category {
+  uuid             String     @id @db.Uuid
+  name             String     @unique
+  Categories       Category?  @relation("Categories", fields: [father_category], references: [uuid])
+  father_category  String?    @db.Uuid
+  create_on        DateTime   @default(now())
+  updated_on       DateTime   @default(now())
+  SubCategories    Category[] @relation("Categories")
+  Products         Product[]
+}
+
+model Country {
+  uuid       String   @id  @db.Uuid
+  name       String   @unique
+  create_on  DateTime @default(now())
+  updated_on DateTime @default(now())
+  Customers Customer[]
+}
+
+model State {
+  uuid       String   @id  @db.Uuid
+  name       String   @unique
+  geom       Unsupported("GEOMETRY")?
+  create_on  DateTime @default(now())
+  updated_on DateTime @default(now())
+  Customers Customer[]
+}
+
+model Customer {
+  uuid        String   @id  @db.Uuid
+  name        String
+  segment     String   @db.Uuid
+  postal_code String
+  city        String
+  state       String   @db.Uuid
+  country     String   @db.Uuid
+  create_on   DateTime @default(now())
+  updated_on  DateTime @default(now())
+  State       State    @relation(fields: [state], references: [uuid])
+  Country     Country  @relation(fields: [country], references: [uuid])
+  Segment     Segment  @relation(fields: [segment], references: [uuid])
+
+  Orders Order[]
+}
+
+model Product {
+  uuid       String   @id  @db.Uuid
+  name       String
+  category   String   @db.Uuid
+  create_on  DateTime @default(now())
+  updated_on DateTime @default(now())
+
+  Category   Category @relation(fields: [category], references: [uuid])
+
+  ProductOrders OrderProduct[]
+}
+
+model Order {
+  uuid         String    @id  @db.Uuid
+  order_date   DateTime  
+  ship_date    DateTime  
+  ship_mode    String    @db.Uuid
+  shipping_cost Float
+  customer     String    @db.Uuid
+  priority     String    @db.Uuid
+  market       String    @db.Uuid
+  create_on    DateTime  @default(now())
+  updated_on   DateTime  @default(now())
+
+  ShipMode     ShipMode @relation(fields: [ship_mode], references: [uuid])
+  Customer     Customer @relation(fields: [customer], references: [uuid])
+  Priority     Priority @relation(fields: [priority], references: [uuid])
+  Market       Market   @relation(fields: [market], references: [uuid])
+
+  OrderProducts OrderProduct[]
+}
+
+model OrderProduct {
+  order_uuid   String   @db.Uuid
+  product_uuid String   @db.Uuid
+  quantity     Int
+  discount     Float
+  sales        Float
+  profit       Float
+  create_on    DateTime @default(now())
+  updated_on   DateTime @default(now())
+
+  @@id([order_uuid, product_uuid])
+
+  Order   Order   @relation(fields: [order_uuid], references: [uuid])
+  Product Product @relation(fields: [product_uuid], references: [uuid])
+}
