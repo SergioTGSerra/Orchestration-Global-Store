@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="Store">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Orders">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Order" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Shipping">
+											<xs:complexType>
+												<xs:attribute name="date" type="xs:string"
+													use="required" />
+												<xs:attribute name="mode" type="xs:string"
+													use="required" />
+												<xs:attribute name="cost" use="required">
+													<xs:simpleType>
+														<xs:restriction base="xs:float">
+															<xs:minInclusive value="0" />
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:attribute>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Products">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Product" maxOccurs="unbounded">
+														<xs:complexType>
+															<xs:attribute name="id" type="xs:string"
+																use="required" />
+															<xs:attribute name="quantity"
+																use="required">
+																<xs:simpleType>
+																	<xs:restriction
+																		base="xs:integer">
+																		<xs:minInclusive value="0" />
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="discount">
+																<xs:simpleType>
+																	<xs:restriction base="xs:float">
+																		<xs:minInclusive value="0" />
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="sales"
+																use="required">
+																<xs:simpleType>
+																	<xs:restriction base="xs:float">
+																		<xs:minInclusive value="0" />
+																	</xs:restriction>
+																</xs:simpleType>
+															</xs:attribute>
+															<xs:attribute name="profit"
+																type="xs:float" use="required" />
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+									<xs:attribute name="id" type="xs:string" use="required" />
+									<xs:attribute name="date" use="required" />
+									<xs:attribute name="priority" use="required">
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:enumeration value="Critical" />
+												<xs:enumeration value="High" />
+												<xs:enumeration value="Low" />
+												<xs:enumeration value="Medium" />
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:attribute>
+									<xs:attribute name="customer_ref" type="xs:string"
+										use="required" />
+									<xs:attribute name="market_ref" type="xs:integer" use="required" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:unique name="OrderUniqueId">
+						<xs:selector xpath=".//Orders/Order" />
+						<xs:field xpath="@id" />
+					</xs:unique>
+				</xs:element>
+				<xs:element name="Products">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Product" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:attribute name="id" type="xs:string" use="required" />
+									<xs:attribute name="name" type="xs:string" use="required" />
+									<xs:attribute name="category_ref" type="xs:integer"
+										use="required" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:unique name="productUniqueId">
+						<xs:selector xpath=".//Products/Product" />
+						<xs:field xpath="@id" />
+					</xs:unique>
+				</xs:element>
+				<xs:element name="Markets">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Market" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:attribute name="id" type="xs:integer" use="required" />
+									<xs:attribute name="name" type="xs:string" use="required" />
+									<xs:attribute name="region" type="xs:string" use="required" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:unique name="OMarketUniqueId">
+						<xs:selector xpath=".//Markets/Market" />
+						<xs:field xpath="@id" />
+					</xs:unique>
+				</xs:element>
+				<xs:element name="Customers">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Customer" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="Address">
+											<xs:complexType>
+												<xs:attribute name="country_ref" type="xs:integer"
+													use="required" />
+												<xs:attribute name="city" type="xs:string"
+													use="required" />
+												<xs:attribute name="state_ref" type="xs:integer"
+													use="required" />
+												<xs:attribute name="postal_code" type="xs:string" />
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+									<xs:attribute name="id" type="xs:string" use="required" />
+									<xs:attribute name="name" type="xs:string" use="required" />
+									<xs:attribute name="segment_ref" type="xs:integer"
+										use="required" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:unique name="CustomerUniqueId">
+						<xs:selector xpath=".//Customers/Customer" />
+						<xs:field xpath="@id" />
+					</xs:unique>
+				</xs:element>
+				<xs:element name="Segments">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Segment" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:attribute name="id" type="xs:integer" use="required" />
+									<xs:attribute name="name" type="xs:string" use="required" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:unique name="SegmentUniqueId">
+						<xs:selector xpath=".//Segments/Segment" />
+						<xs:field xpath="@id" />
+					</xs:unique>
+				</xs:element>
+				<xs:element name="States">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="State" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:attribute name="id" type="xs:integer" use="required" />
+									<xs:attribute name="name" type="xs:string" use="required" />
+									<xs:attribute name="lat" type="xs:double" />
+									<xs:attribute name="lon" type="xs:double" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:unique name="StateUniqueId">
+						<xs:selector xpath=".//States/State" />
+						<xs:field xpath="@id" />
+					</xs:unique>
+				</xs:element>
+				<xs:element name="Countries">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Country" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:attribute name="id" type="xs:integer" use="required" />
+									<xs:attribute name="name" type="xs:string" use="required" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:unique name="CountryUniqueId">
+						<xs:selector xpath=".//Countries/Country" />
+						<xs:field xpath="@id" />
+					</xs:unique>
+				</xs:element>
+				<xs:element name="Categories">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="Category" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:attribute name="id" type="xs:integer" use="required" />
+									<xs:attribute name="name" type="xs:string" use="required" />
+									<xs:attribute name="parent_category_id" type="xs:integer" />
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:unique name="CategoryUniqueId">
+						<xs:selector xpath=".//Categories/Category" />
+						<xs:field xpath="@id" />
+					</xs:unique>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+		<xs:key name="categoryKey">
+			<xs:selector xpath="Categories/Category" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		<xs:keyref name="productCategoryRef" refer="categoryKey">
+			<xs:selector xpath="Products/Product" />
+			<xs:field xpath="@category_ref" />
+		</xs:keyref>
+		<xs:key name="marketKey">
+			<xs:selector xpath="Markets/Market" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		<xs:keyref name="orderMarketRef" refer="marketKey">
+			<xs:selector xpath="Orders/Order" />
+			<xs:field xpath="@market_ref" />
+		</xs:keyref>
+		<xs:key name="customerKey">
+			<xs:selector xpath="Customers/Customer" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		<xs:keyref name="orderCustomerRef" refer="customerKey">
+			<xs:selector xpath="Orders/Order" />
+			<xs:field xpath="@customer_ref" />
+		</xs:keyref>
+		<xs:key name="orderProductIDKey">
+			<xs:selector xpath="Products/Product" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		<xs:keyref name="orderProductIDRef" refer="orderProductIDKey">
+			<xs:selector xpath="Orders/Order/Products/Product" />
+			<xs:field xpath="@id" />
+		</xs:keyref>
+		<xs:key name="segmentKey">
+			<xs:selector xpath="Segments/Segment" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		<xs:keyref name="customerSegmentRef" refer="segmentKey">
+			<xs:selector xpath="Customers/Customer" />
+			<xs:field xpath="@segment_ref" />
+		</xs:keyref>
+		<xs:key name="stateKey">
+			<xs:selector xpath="States/State" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		<xs:keyref name="addressStateRef" refer="stateKey">
+			<xs:selector xpath="Customers/Customer/Address" />
+			<xs:field xpath="@state_ref" />
+		</xs:keyref>
+		<xs:key name="countryKey">
+			<xs:selector xpath="Countries/Country" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		<xs:keyref name="addressCountryRef" refer="countryKey">
+			<xs:selector xpath="Customers/Customer/Address" />
+			<xs:field xpath="@country_ref" />
+		</xs:keyref>
+		<xs:key name="parentCategoryKey">
+			<xs:selector xpath="Categories/Category" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		<xs:keyref name="parentCategoryRef" refer="parentCategoryKey">
+			<xs:selector xpath="Categories/Category" />
+			<xs:field xpath="@parent_category_id" />
+		</xs:keyref>
+	</xs:element>
+</xs:schema>
