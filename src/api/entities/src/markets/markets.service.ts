@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 @Injectable()
 export class MarketsService {
@@ -15,16 +15,16 @@ export class MarketsService {
         });
     }
 
-    async create(data: any): Promise<any> {
+    async create(createMarketDto: Prisma.MarketCreateInput): Promise<any> {
         return this.prisma.market.create({
-            data: data
+            data: createMarketDto
         });
     }
 
-    async update(uuid: string, data: any): Promise<any> {
+    async update(uuid: string, updateMarketDto: Prisma.MarketUpdateInput): Promise<any> {
         return this.prisma.market.update({
             where: { uuid: uuid },
-            data: data
+            data: updateMarketDto
         });
     }
 

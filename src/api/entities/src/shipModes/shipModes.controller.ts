@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
 import { ShipModesService } from './shipModes.service';
+import { Prisma } from '@prisma/client';
 
 @Controller('shipModes')
 export class ShipModesController {
@@ -16,13 +17,13 @@ export class ShipModesController {
     }
 
     @Post()
-    async create(@Body() data: { name: string }) {
-        return this.shipModesService.create(data);
+    async create(@Body() createShipModeDto: Prisma.ShipModeCreateInput) {
+        return this.shipModesService.create(createShipModeDto);
     }
 
     @Put(':uuid')
-    async update(@Param('uuid') uuid: string, @Body() data: { name?: string }) {
-        return this.shipModesService.update(uuid, data);
+    async update(@Param('uuid') uuid: string, @Body() updateShipModeDto: Prisma.ShipModeUpdateInput) {
+        return this.shipModesService.update(uuid, updateShipModeDto);
     }
 
     @Delete(':uuid')

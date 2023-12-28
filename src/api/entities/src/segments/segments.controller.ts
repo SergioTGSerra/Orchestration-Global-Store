@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
 import { SegmentsService } from './segments.service';
+import { Prisma } from '@prisma/client';
 
 @Controller('segments')
 export class SegmentsController {
@@ -16,13 +17,13 @@ export class SegmentsController {
     }
 
     @Post()
-    async create(@Body() data: { name: string }) {
-        return this.segmentsService.create(data);
+    async create(@Body() createSegmentDto: Prisma.SegmentCreateInput) {
+        return this.segmentsService.create(createSegmentDto);
     }
 
     @Put(':uuid')
-    async update(@Param('uuid') uuid: string, @Body() data: { name?: string }) {
-        return this.segmentsService.update(uuid, data);
+    async update(@Param('uuid') uuid: string, @Body() updateSegmentDto: Prisma.SegmentUpdateInput) {
+        return this.segmentsService.update(uuid, updateSegmentDto);
     }
 
     @Delete(':uuid')

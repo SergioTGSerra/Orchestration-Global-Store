@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
 import { MarketsService } from './markets.service';
+import { Prisma } from '@prisma/client';
 
 @Controller('markets')
 export class MarketsController {
@@ -16,13 +17,13 @@ export class MarketsController {
     }
 
     @Post()
-    async create(@Body() data: { name: string; region: string }) {
-        return this.marketsService.create(data);
+    async create(@Body() createMarketDto: Prisma.MarketCreateInput) {
+        return this.marketsService.create(createMarketDto);
     }
 
     @Put(':uuid')
-    async update(@Param('uuid') uuid: string, @Body() data: { name?: string; region?: string }) {
-        return this.marketsService.update(uuid, data);
+    async update(@Param('uuid') uuid: string, @Body() updateMarketDto: Prisma.MarketUpdateInput ) {
+        return this.marketsService.update(uuid, updateMarketDto);
     }
 
     @Delete(':uuid')

@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
 import { PrioritiesService } from './priorities.service';
+import { Prisma } from '@prisma/client';
 
 @Controller('priorities')
 export class PrioritiesController {
@@ -16,13 +17,13 @@ export class PrioritiesController {
     }
 
     @Post()
-    async create(@Body() data: { name: string }) {
-        return this.prioritiesService.create(data);
+    async create(@Body() createPriorityDto: Prisma.PriorityCreateInput) {
+        return this.prioritiesService.create(createPriorityDto);
     }
 
     @Put(':uuid')
-    async update(@Param('uuid') uuid: string, @Body() data: { name?: string }) {
-        return this.prioritiesService.update(uuid, data);
+    async update(@Param('uuid') uuid: string, @Body() updatePriorityDto: Prisma.PriorityUpdateInput) {
+        return this.prioritiesService.update(uuid, updatePriorityDto);
     }
 
     @Delete(':uuid')

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ShipModesService {
@@ -15,16 +15,16 @@ export class ShipModesService {
         });
     }
 
-    async create(data: any): Promise<any> {
+    async create(createShipModeDto: Prisma.ShipModeCreateInput): Promise<any> {
         return this.prisma.shipMode.create({
-            data: data
+            data: createShipModeDto
         });
     }
 
-    async update(uuid: string, data: any): Promise<any> {
+    async update(uuid: string, updateShipModeDto: Prisma.ShipModeUpdateInput): Promise<any> {
         return this.prisma.shipMode.update({
             where: { uuid: uuid },
-            data: data
+            data: updateShipModeDto
         });
     }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 @Injectable()
 export class SegmentsService {
@@ -15,16 +15,16 @@ export class SegmentsService {
         });
     }
 
-    async create(data: any): Promise<any> {
+    async create(createSegmentDto: Prisma.SegmentCreateInput): Promise<any> {
         return this.prisma.segment.create({
-            data: data
+            data: createSegmentDto
         });
     }
 
-    async update(uuid: string, data: any): Promise<any> {
+    async update(uuid: string, updateSegmentDto: Prisma.SegmentUpdateInput): Promise<any> {
         return this.prisma.segment.update({
             where: { uuid: uuid },
-            data: data
+            data: updateSegmentDto
         });
     }
 

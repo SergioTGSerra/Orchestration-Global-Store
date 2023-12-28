@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 @Injectable()
 export class PrioritiesService {
@@ -15,16 +15,16 @@ export class PrioritiesService {
         });
     }
 
-    async create(data: any): Promise<any> {
+    async create(createPriorityDto: Prisma.PriorityCreateInput): Promise<any> {
         return this.prisma.priority.create({
-            data: data
+            data: createPriorityDto
         });
     }
 
-    async update(uuid: string, data: any): Promise<any> {
+    async update(uuid: string, updatePriorityDto: Prisma.PriorityUpdateInput): Promise<any> {
         return this.prisma.priority.update({
             where: { uuid: uuid },
-            data: data
+            data: updatePriorityDto
         });
     }
 

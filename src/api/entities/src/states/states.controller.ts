@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
 import { StatesService } from './states.service';
+import { Prisma } from '@prisma/client';
 
 @Controller('states')
 export class StatesController {
@@ -16,13 +17,13 @@ export class StatesController {
     }
 
     @Post()
-    async create(@Body() data: { name: string; }) {
-        return this.statesService.create(data);
+    async create(@Body() createStatesDto: Prisma.StateCreateInput) {
+        return this.statesService.create(createStatesDto);
     }
 
     @Put(':uuid')
-    async update(@Param('uuid') uuid: string, @Body() data: { name?: string }) {
-        return this.statesService.update(uuid, data);
+    async update(@Param('uuid') uuid: string, @Body() updateStatesDto: Prisma.StateUpdateInput) {
+        return this.statesService.update(uuid, updateStatesDto);
     }
 
     @Delete(':uuid')

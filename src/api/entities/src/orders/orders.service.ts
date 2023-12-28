@@ -2,34 +2,34 @@ import { Injectable } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
 
 @Injectable()
-export class StatesService {
+export class OrdersService {
     private prisma = new PrismaClient();
 
     async findAll(): Promise<any[]> {
-        return this.prisma.state.findMany();
+        return this.prisma.order.findMany();
     }
 
     async findOne(uuid: string): Promise<any> {
-        return this.prisma.state.findUnique({
+        return this.prisma.order.findUnique({
             where: { uuid: uuid, },
         });
     }
 
-    async create(createStateDto: Prisma.StateCreateInput): Promise<any> {
-        return this.prisma.state.create({
-            data: createStateDto
+    async create(createOrderDto: Prisma.OrderCreateInput): Promise<any> {
+        return this.prisma.order.create({
+            data: createOrderDto
         });
     }
 
-    async update(uuid: string, updateStateDto: Prisma.StateUpdateInput): Promise<any> {
-        return this.prisma.state.update({
+    async update(uuid: string, updateOrderDto: Prisma.OrderUpdateInput): Promise<any> {
+        return this.prisma.order.update({
             where: { uuid: uuid },
-            data: updateStateDto
+            data: updateOrderDto
         });
     }
 
     async delete(uuid: string): Promise<any> {
-        return this.prisma.state.delete({
+        return this.prisma.order.delete({
             where: { uuid: uuid }
         });
     }
