@@ -2,7 +2,6 @@ import signal, sys
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 
-from functions.receive_file import receive_file
 from functions.delete_file import delete_file
 from functions.show_files import show_files
 from functions.queries import *
@@ -28,7 +27,6 @@ with SimpleXMLRPCServer(('0.0.0.0', 9000), requestHandler=RequestHandler) as ser
     signal.signal(signal.SIGINT, signal_handler)
 
     # register both functions
-    server.register_function(receive_file, 'send_file')
     server.register_function(delete_file, 'delete_file')
     server.register_function(show_files, 'show_files')
     server.register_function(get_orders_order_by_priority, 'get_orders_order_by_priority')

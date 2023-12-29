@@ -15,3 +15,10 @@ CREATE TABLE public.converted_documents (
 	created_on      TIMESTAMP NOT NULL DEFAULT NOW(),
 	updated_on      TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE public.queries (
+	id serial PRIMARY KEY,
+	query_type VARCHAR(250) NOT NULL,
+	file_name VARCHAR(250) NOT NULL,
+	xml XML NOT NULL
+);
