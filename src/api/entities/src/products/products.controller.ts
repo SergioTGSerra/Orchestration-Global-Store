@@ -16,6 +16,11 @@ export class ProductsController {
         return this.productsService.findOne(uuid);
     }
 
+    @Get(':uuid/orders')
+    async findOrders(@Param('uuid') uuid: string) {
+        return this.productsService.findOrders(uuid);
+    }
+
     @Post()
     async create(@Body() createProductsDto: Prisma.ProductCreateInput) {
         return this.productsService.create(createProductsDto);

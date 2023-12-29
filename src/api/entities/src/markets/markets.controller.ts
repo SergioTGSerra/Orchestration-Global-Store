@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 
 @Controller('markets')
 export class MarketsController {
-    constructor(private readonly marketsService: MarketsService) {}
+    constructor(private readonly marketsService: MarketsService) { }
 
     @Get()
     async findAll() {
@@ -16,13 +16,18 @@ export class MarketsController {
         return this.marketsService.findOne(uuid);
     }
 
+    @Get(':uuid/orders')
+    async findOrders(@Param('uuid') uuid: string) {
+        return this.marketsService.findOrders(uuid);
+    }
+
     @Post()
     async create(@Body() createMarketDto: Prisma.MarketCreateInput) {
         return this.marketsService.create(createMarketDto);
     }
 
     @Put(':uuid')
-    async update(@Param('uuid') uuid: string, @Body() updateMarketDto: Prisma.MarketUpdateInput ) {
+    async update(@Param('uuid') uuid: string, @Body() updateMarketDto: Prisma.MarketUpdateInput) {
         return this.marketsService.update(uuid, updateMarketDto);
     }
 

@@ -16,6 +16,11 @@ export class PrioritiesController {
         return this.prioritiesService.findOne(uuid);
     }
 
+    @Get(':uuid/orders')
+    async findOrders(@Param('uuid') uuid: string) {
+        return this.prioritiesService.findOrders(uuid);
+    }
+
     @Post()
     async create(@Body() createPriorityDto: Prisma.PriorityCreateInput) {
         return this.prioritiesService.create(createPriorityDto);

@@ -16,6 +16,11 @@ export class CustomersController {
         return this.customersService.findOne(uuid);
     }
 
+    @Get(':uuid/orders')
+    async findOrders(@Param('uuid') uuid: string) {
+        return this.customersService.findOrders(uuid);
+    }
+
     @Post()
     async create(@Body() createCustomerDto: Prisma.CustomerCreateInput) {
         return this.customersService.create(createCustomerDto);

@@ -56,10 +56,10 @@ model Segment {
 model Category {
   uuid             String     @id @db.Uuid
   name             String     @unique
-  Categories       Category?  @relation("Categories", fields: [father_category], references: [uuid])
   father_category  String?    @db.Uuid
   create_on        DateTime   @default(now())
   updated_on       DateTime   @default(now())
+  Categories       Category?  @relation("Categories", fields: [father_category], references: [uuid])
   SubCategories    Category[] @relation("Categories")
   Products         Product[]
 }

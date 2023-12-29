@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 @Controller('countries')
 export class CountriesController {
     constructor(private readonly countriesService: CountriesService) { }
-    
+
     @Get()
     async findAll() {
         return this.countriesService.findAll();
@@ -14,6 +14,11 @@ export class CountriesController {
     @Get(':uuid')
     async findOne(@Param('uuid') uuid: string) {
         return this.countriesService.findOne(uuid);
+    }
+
+    @Get(':uuid/customers')
+    async findCustomers(@Param('uuid') uuid: string) {
+        return this.countriesService.findCustomers(uuid);
     }
 
     @Post()

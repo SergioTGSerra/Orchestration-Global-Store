@@ -16,6 +16,16 @@ export class CategoriesController {
         return this.categoriesService.findOne(uuid);
     }
 
+    @Get('parent-categories')
+    async findParentCategories() {
+        return this.categoriesService.findParentCategories();
+    }
+
+    @Get(':uuid/products')
+    async findProducts(@Param('uuid') uuid: string) {
+        return this.categoriesService.findProducts(uuid);
+    }
+
     @Post()
     async create(@Body() createCategoryDto: Prisma.CategoryCreateInput) {
         return this.categoriesService.create(createCategoryDto);

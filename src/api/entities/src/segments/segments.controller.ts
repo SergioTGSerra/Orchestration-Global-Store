@@ -16,6 +16,11 @@ export class SegmentsController {
         return this.segmentsService.findOne(uuid);
     }
 
+    @Get(':uuid/customers')
+    async findCustomers(@Param('uuid') uuid: string) {
+        return this.segmentsService.findCustomers(uuid);
+    }
+
     @Post()
     async create(@Body() createSegmentDto: Prisma.SegmentCreateInput) {
         return this.segmentsService.create(createSegmentDto);

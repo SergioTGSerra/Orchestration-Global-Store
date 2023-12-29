@@ -16,6 +16,11 @@ export class StatesController {
         return this.statesService.findOne(uuid);
     }
 
+    @Get(':uuid/customers')
+    async findCustomers(@Param('uuid') uuid: string) {
+        return this.statesService.findCustomers(uuid);
+    }
+
     @Post()
     async create(@Body() createStatesDto: Prisma.StateCreateInput) {
         return this.statesService.create(createStatesDto);

@@ -2,9 +2,9 @@ import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common'
 import { ShipModesService } from './shipModes.service';
 import { Prisma } from '@prisma/client';
 
-@Controller('shipModes')
+@Controller('ship-modes')
 export class ShipModesController {
-    constructor(private readonly shipModesService: ShipModesService) {}
+    constructor(private readonly shipModesService: ShipModesService) { }
 
     @Get()
     async findAll() {
@@ -14,6 +14,11 @@ export class ShipModesController {
     @Get(':uuid')
     async findOne(@Param('uuid') uuid: string) {
         return this.shipModesService.findOne(uuid);
+    }
+
+    @Get(':uuid/orders')
+    async findOrders(@Param('uuid') uuid: string) {
+        return this.shipModesService.findOrders(uuid);
     }
 
     @Post()
