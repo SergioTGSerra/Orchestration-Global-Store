@@ -20,7 +20,7 @@ model Teacher {
   updated_on      DateTime @default(now())
 }
 
-model Market {
+model Markets {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   region     String
@@ -29,7 +29,7 @@ model Market {
   Orders Order[]
 }
 
-model ShipMode {
+model ShipModes {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   create_on  DateTime @default(now())
@@ -37,7 +37,7 @@ model ShipMode {
   Orders Order[]
 }
 
-model Priority {
+model Priorities {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   create_on  DateTime @default(now())
@@ -45,7 +45,7 @@ model Priority {
   Orders Order[]
 }
 
-model Segment {
+model Segments {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   create_on  DateTime @default(now())
@@ -53,7 +53,7 @@ model Segment {
   Customers Customer[]
 }
 
-model Category {
+model Categories {
   uuid             String     @id @db.Uuid
   name             String     @unique
   father_category  String?    @db.Uuid
@@ -64,7 +64,7 @@ model Category {
   Products         Product[]
 }
 
-model Country {
+model Countries {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   create_on  DateTime @default(now())
@@ -72,7 +72,7 @@ model Country {
   Customers Customer[]
 }
 
-model State {
+model States {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   geom       Unsupported("GEOMETRY")?
@@ -81,7 +81,7 @@ model State {
   Customers Customer[]
 }
 
-model Customer {
+model Customers {
   uuid        String   @id  @db.Uuid
   name        String
   segment     String   @db.Uuid
@@ -98,7 +98,7 @@ model Customer {
   Orders Order[]
 }
 
-model Product {
+model Products {
   uuid       String   @id  @db.Uuid
   name       String
   category   String   @db.Uuid
@@ -110,7 +110,7 @@ model Product {
   ProductOrders OrderProduct[]
 }
 
-model Order {
+model Orders {
   uuid         String    @id  @db.Uuid
   order_date   DateTime  
   ship_date    DateTime  
@@ -130,7 +130,7 @@ model Order {
   OrderProducts OrderProduct[]
 }
 
-model OrderProduct {
+model OrderProducts {
   order_uuid   String   @db.Uuid
   product_uuid String   @db.Uuid
   quantity     Int
