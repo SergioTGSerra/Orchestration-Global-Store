@@ -5,6 +5,7 @@ import re
 def convert_xml_to_json(xml):    
     data_dict = xmltodict.parse(xml)
     json_data = json.dumps(data_dict)
+    json_data = json_data.replace("@", "")    
     return json_data
 
 def merge_xml_element(xml, element_name):
