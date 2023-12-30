@@ -67,9 +67,10 @@ def get_order_and_customer_details_with_geographic_information():
 @cross_origin()
 def get_markets():
     xml = ""
-    if(server.show_files()):
-        for file in server.show_files():
-            xml += server.get_markets(file[1])
+    if server.show_files():
+        file = server.show_files()[0]
+        xml += server.get_markets(file[1])
+
     xml = merge_xml_element(xml, get_parent_element(xml))
     return convert_xml_to_json(xml)
 
