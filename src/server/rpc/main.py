@@ -34,7 +34,7 @@ with SimpleXMLRPCServer(('0.0.0.0', 9000), requestHandler=RequestHandler) as ser
     server.register_function(retrieve_customer_information_with_address_details, 'retrieve_customer_information_with_address_details')
     server.register_function(count_the_number_of_customers_by_segment_server, 'count_the_number_of_customers_by_segment_server')
     server.register_function(get_order_and_customer_details_with_geographic_information, 'get_order_and_customer_details_with_geographic_information')
-
+    server.register_function(get_markets, 'get_markets')
 
     # start the server
     print("Starting the RPC Server...")

@@ -310,3 +310,53 @@ def get_order_and_customer_details_with_geographic_information(file_name):
     
     else:
         return "No results found"
+    
+def get_markets(file_name):
+    db = DBConnection()
+    db.connect()
+
+    file_exists = db.execute_query_with_return("SELECT xml FROM queries WHERE file_name = %s and query_type = %s", (file_name, "6",))
+
+    if file_exists:
+        db.disconnect()
+        return file_exists[0][0]
+
+    xquery = """
+            SELECT
+                m.market_id,
+                m.market_name
+            FROM (
+                SELECT
+                    unnest(xpath('//Markets/Market/@id', xml))::text AS market_id,
+                    unnest(xpath('//Markets/Market/@name', xml))::text AS market_name
+                FROM
+                    imported_documents
+                WHERE
+                    file_name = %s
+            ) m
+            GROUP BY
+                m.market_id, m.market_name
+            ORDER BY
+                m.market_name;
+    """
+
+    result = db.execute_query_with_return(xquery, (file_name,))
+
+    if result:
+        root = etree.Element("Markets")
+        for market in result:
+            market_element = etree.SubElement(
+                root,
+                "Market",
+                id=str(market[0]),
+                name=market[1],
+            )
+
+        xml_result = etree.tostring(root, pretty_print=True).decode("utf-8")
+
+        db.execute_query("INSERT INTO queries (query_type, file_name, xml) VALUES (6, %s, %s)", (file_name, xml_result))
+
+        db.disconnect()
+
+        return xml_result
+            
