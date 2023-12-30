@@ -24,16 +24,6 @@ export class CategoriesService {
         return category;
     }
 
-    async findParentCategories(): Promise<any> {
-        const categories = await this.prisma.category.findMany({
-            where: { father_category: "" },
-        });
-        if (!categories) {
-            throw new NotFoundException('Parent Categories not found');
-        }
-        return categories;
-    }
-
     async findProducts(uuid: string): Promise<any> {
         const category = await this.prisma.category.findUnique({
             where: { uuid: uuid },
