@@ -38,12 +38,6 @@ export class MarketsService {
     }
 
     async create(createMarketDto: Prisma.MarketCreateInput): Promise<any> {
-        const existingName = await this.prisma.market.findUnique({
-            where: { name: createMarketDto.name },
-        });
-        if (existingName) {
-            throw new HttpException('Market name already exists', HttpStatus.BAD_REQUEST)
-        }
         return this.prisma.market.create({
             data: createMarketDto,
         });
@@ -55,14 +49,6 @@ export class MarketsService {
         });
         if (!existingMarket) {
             throw new NotFoundException(`Market not found`);
-        }
-        if (updateMarketDto.name && updateMarketDto.name !== existingMarket.name) {
-            const existingName = await this.prisma.market.findUnique({
-                where: { name: updateMarketDto.name as string, NOT: { uuid: uuid } },
-            });
-            if (existingName) {
-                throw new HttpException('Market name already exists', HttpStatus.BAD_REQUEST)
-            }
         }
         return this.prisma.market.update({
             where: { uuid: uuid },

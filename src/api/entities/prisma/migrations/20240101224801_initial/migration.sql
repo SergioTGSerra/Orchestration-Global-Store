@@ -8,90 +8,80 @@ CREATE EXTENSION IF NOT EXISTS "postgis_topology";
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- CreateTable
-CREATE TABLE "Teacher" (
-    "name" TEXT NOT NULL,
-    "city" TEXT NOT NULL,
-    "created_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Teacher_pkey" PRIMARY KEY ("name")
-);
-
--- CreateTable
-CREATE TABLE "Market" (
+CREATE TABLE "markets" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "region" TEXT NOT NULL,
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Market_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "markets_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "ShipMode" (
+CREATE TABLE "ship_modes" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "ShipMode_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "ship_modes_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "Priority" (
+CREATE TABLE "priorities" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Priority_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "priorities_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "Segment" (
+CREATE TABLE "segments" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Segment_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "segments_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "Category" (
+CREATE TABLE "categories" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "father_category" UUID,
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Category_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "categories_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "Country" (
+CREATE TABLE "countries" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Country_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "countries_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "State" (
+CREATE TABLE "states" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "geom" GEOMETRY,
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "State_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "states_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "Customer" (
+CREATE TABLE "customers" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "segment" UUID NOT NULL,
@@ -102,22 +92,22 @@ CREATE TABLE "Customer" (
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Customer_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "customers_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "Product" (
+CREATE TABLE "products" (
     "uuid" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "category" UUID NOT NULL,
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Product_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "products_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "Order" (
+CREATE TABLE "orders" (
     "uuid" UUID NOT NULL,
     "order_date" TIMESTAMP(3) NOT NULL,
     "ship_date" TIMESTAMP(3) NOT NULL,
@@ -129,11 +119,11 @@ CREATE TABLE "Order" (
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Order_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "orders_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "OrderProduct" (
+CREATE TABLE "order_products" (
     "order_uuid" UUID NOT NULL,
     "product_uuid" UUID NOT NULL,
     "quantity" INTEGER NOT NULL,
@@ -143,59 +133,56 @@ CREATE TABLE "OrderProduct" (
     "create_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_on" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "OrderProduct_pkey" PRIMARY KEY ("order_uuid","product_uuid")
+    CONSTRAINT "order_products_pkey" PRIMARY KEY ("order_uuid","product_uuid")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Market_name_key" ON "Market"("name");
+CREATE UNIQUE INDEX "ship_modes_name_key" ON "ship_modes"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ShipMode_name_key" ON "ShipMode"("name");
+CREATE UNIQUE INDEX "priorities_name_key" ON "priorities"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Priority_name_key" ON "Priority"("name");
+CREATE UNIQUE INDEX "segments_name_key" ON "segments"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Segment_name_key" ON "Segment"("name");
+CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
+CREATE UNIQUE INDEX "countries_name_key" ON "countries"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Country_name_key" ON "Country"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "State_name_key" ON "State"("name");
+CREATE UNIQUE INDEX "states_name_key" ON "states"("name");
 
 -- AddForeignKey
-ALTER TABLE "Category" ADD CONSTRAINT "Category_father_category_fkey" FOREIGN KEY ("father_category") REFERENCES "Category"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "categories" ADD CONSTRAINT "categories_father_category_fkey" FOREIGN KEY ("father_category") REFERENCES "categories"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Customer" ADD CONSTRAINT "Customer_state_fkey" FOREIGN KEY ("state") REFERENCES "State"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "customers" ADD CONSTRAINT "customers_state_fkey" FOREIGN KEY ("state") REFERENCES "states"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Customer" ADD CONSTRAINT "Customer_country_fkey" FOREIGN KEY ("country") REFERENCES "Country"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "customers" ADD CONSTRAINT "customers_country_fkey" FOREIGN KEY ("country") REFERENCES "countries"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Customer" ADD CONSTRAINT "Customer_segment_fkey" FOREIGN KEY ("segment") REFERENCES "Segment"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "customers" ADD CONSTRAINT "customers_segment_fkey" FOREIGN KEY ("segment") REFERENCES "segments"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Product" ADD CONSTRAINT "Product_category_fkey" FOREIGN KEY ("category") REFERENCES "Category"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "products" ADD CONSTRAINT "products_category_fkey" FOREIGN KEY ("category") REFERENCES "categories"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_ship_mode_fkey" FOREIGN KEY ("ship_mode") REFERENCES "ShipMode"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "orders" ADD CONSTRAINT "orders_ship_mode_fkey" FOREIGN KEY ("ship_mode") REFERENCES "ship_modes"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_customer_fkey" FOREIGN KEY ("customer") REFERENCES "Customer"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "orders" ADD CONSTRAINT "orders_customer_fkey" FOREIGN KEY ("customer") REFERENCES "customers"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_priority_fkey" FOREIGN KEY ("priority") REFERENCES "Priority"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "orders" ADD CONSTRAINT "orders_priority_fkey" FOREIGN KEY ("priority") REFERENCES "priorities"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_market_fkey" FOREIGN KEY ("market") REFERENCES "Market"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "orders" ADD CONSTRAINT "orders_market_fkey" FOREIGN KEY ("market") REFERENCES "markets"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrderProduct" ADD CONSTRAINT "OrderProduct_order_uuid_fkey" FOREIGN KEY ("order_uuid") REFERENCES "Order"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "order_products" ADD CONSTRAINT "order_products_order_uuid_fkey" FOREIGN KEY ("order_uuid") REFERENCES "orders"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrderProduct" ADD CONSTRAINT "OrderProduct_product_uuid_fkey" FOREIGN KEY ("product_uuid") REFERENCES "Product"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "order_products" ADD CONSTRAINT "order_products_product_uuid_fkey" FOREIGN KEY ("product_uuid") REFERENCES "products"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;

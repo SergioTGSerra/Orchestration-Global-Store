@@ -13,47 +13,48 @@ datasource db {
   extensions = [uuidOssp(map: "uuid-ossp"), postgis, postgis_topology]
 }
 
-model Teacher {
-  name    String  @id
-  city    String
-  created_on      DateTime @default(now())
-  updated_on      DateTime @default(now())
-}
-
-model Markets {
+model Market {
   uuid       String   @id  @db.Uuid
-  name       String   @unique
+  name       String
   region     String
   create_on  DateTime @default(now())
   updated_on DateTime @default(now())
   Orders Order[]
+
+  @@map(name: "markets")
 }
 
-model ShipModes {
+model ShipMode {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   create_on  DateTime @default(now())
   updated_on DateTime @default(now())
   Orders Order[]
+
+  @@map(name: "ship_modes")
 }
 
-model Priorities {
+model Priority {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   create_on  DateTime @default(now())
   updated_on DateTime @default(now())
   Orders Order[]
+
+  @@map(name: "priorities")
 }
 
-model Segments {
+model Segment {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   create_on  DateTime @default(now())
   updated_on DateTime @default(now())
   Customers Customer[]
+
+  @@map(name: "segments")
 }
 
-model Categories {
+model Category {
   uuid             String     @id @db.Uuid
   name             String     @unique
   father_category  String?    @db.Uuid
@@ -62,26 +63,32 @@ model Categories {
   Categories       Category?  @relation("Categories", fields: [father_category], references: [uuid])
   SubCategories    Category[] @relation("Categories")
   Products         Product[]
+
+  @@map(name: "categories")
 }
 
-model Countries {
+model Country {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   create_on  DateTime @default(now())
   updated_on DateTime @default(now())
   Customers Customer[]
+
+  @@map(name: "countries")
 }
 
-model States {
+model State {
   uuid       String   @id  @db.Uuid
   name       String   @unique
   geom       Unsupported("GEOMETRY")?
   create_on  DateTime @default(now())
   updated_on DateTime @default(now())
   Customers Customer[]
+
+  @@map(name: "states")
 }
 
-model Customers {
+model Customer {
   uuid        String   @id  @db.Uuid
   name        String
   segment     String   @db.Uuid
@@ -96,9 +103,11 @@ model Customers {
   Segment     Segment  @relation(fields: [segment], references: [uuid])
 
   Orders Order[]
+
+  @@map(name: "customers")
 }
 
-model Products {
+model Product {
   uuid       String   @id  @db.Uuid
   name       String
   category   String   @db.Uuid
@@ -108,9 +117,11 @@ model Products {
   Category   Category @relation(fields: [category], references: [uuid])
 
   ProductOrders OrderProduct[]
+
+  @@map(name: "products")
 }
 
-model Orders {
+model Order {
   uuid         String    @id  @db.Uuid
   order_date   DateTime  
   ship_date    DateTime  
@@ -128,9 +139,11 @@ model Orders {
   Market       Market   @relation(fields: [market], references: [uuid])
 
   OrderProducts OrderProduct[]
+
+  @@map(name: "orders")
 }
 
-model OrderProducts {
+model OrderProduct {
   order_uuid   String   @db.Uuid
   product_uuid String   @db.Uuid
   quantity     Int
@@ -144,4 +157,6 @@ model OrderProducts {
 
   Order   Order   @relation(fields: [order_uuid], references: [uuid])
   Product Product @relation(fields: [product_uuid], references: [uuid])
+
+  @@map(name: "order_products")
 }
