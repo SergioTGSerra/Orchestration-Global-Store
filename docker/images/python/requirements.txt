@@ -7,3 +7,5 @@ flask==3.0.0
 flask-magql==1.0.0
 flask-cors==4.0.0
 xmltodict==0.13.0
+requests==2.26.0
+pika==1.2.0
