@@ -15,15 +15,15 @@ datasource db {
 
 model Market {
   uuid       String   @id  @db.Uuid
-  name       String  
-  region     String   
+  name       String
+  region     String
   create_on  DateTime @default(now())
   updated_on DateTime @default(now())
   Orders Order[]
 
   @@map(name: "markets")
-  @@unique([name, region], name: "unique_name_region")
 
+  @@unique([name, region], name: "unique_name_region")
 }
 
 model ShipMode {

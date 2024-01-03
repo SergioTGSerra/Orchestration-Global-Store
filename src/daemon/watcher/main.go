@@ -13,8 +13,9 @@ import (
 const (
 	dbURL       = "postgres://is:is@db-xml:5432/is?sslmode=disable"
 	rabbitMQURL = "amqp://is:is@rabbitmq:5672/is"
-	queueName   = "tasks"
-	interval    = 5 * time.Minute
+	entityQueueName = "Entities_Tasks"
+	geospatialQueueName = "Geospatial_Tasks"
+	interval    = 3 * time.Minute
 )
 
 func connectToDatabase() (*sql.DB, error) {
@@ -48,7 +49,7 @@ func connectToRabbitMQ() (*amqp.Connection, error) {
     return conn, err
 }
 
-func publishToRabbitMQ(ch *amqp.Channel, message string) error {
+func publishToRabbitMQ(ch *amqp.Channel, message string, queueName string) error {
 	err := ch.Publish(
 		"",       // exchange
 		queueName, // routing key
@@ -69,36 +70,32 @@ func publishToRabbitMQ(ch *amqp.Channel, message string) error {
 func checkAndPublishNewEntities(db *sql.DB, ch *amqp.Channel) error {
 	var newXMLs []string
 
-	query := "SELECT xml FROM imported_documents WHERE created_on > $1"
+	query := "SELECT id, xml FROM imported_documents WHERE watched = false"
 
-	rows, err := db.Query(query, time.Now().Add(-5*time.Minute))
+	rows, err := db.Query(query)
 	if err != nil {
 		return fmt.Errorf("failed to execute query: %v", err)
 	}
 	defer rows.Close()
-
+	
 	for rows.Next() {
-		var xmlData string
-		if err := rows.Scan(&xmlData); err != nil {
+		var xmlData , id string
+		err = rows.Scan(&id, &xmlData)
+		if err != nil {
 			return fmt.Errorf("failed to scan row: %v", err)
 		}
-		newXMLs = append(newXMLs, xmlData)
+		fmt.Printf("Found new XML document with id: %s\n", id)
+		
+		publishToRabbitMQ(ch, xmlData, entityQueueName)
+		publishToRabbitMQ(ch, "New geospatial data to be updated!", geospatialQueueName)
+
+		query := "update imported_documents set watched = true where id = $1"
+		db.Exec(query, id)
+		
 	}
 
 	fmt.Printf("Found %d new XML documents\n", len(newXMLs))
 
-	for _, xmlData := range newXMLs {
-		message := "New Entities to be imported! " + xmlData
-		err := publishToRabbitMQ(ch, message)
-		if err != nil {
-			return err
-		}
-		message = "New geospatial data to be updated!"
-		err = publishToRabbitMQ(ch, message)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -121,7 +118,19 @@ func main() {
 	defer ch.Close()
 
 	_, err = ch.QueueDeclare(
-		queueName, // name
+		entityQueueName, // name
+		false,     // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
+	)
+	if err != nil {
+		log.Fatalf("Error declaring RabbitMQ queue: %s\n", err)
+	}
+
+	_, err = ch.QueueDeclare(
+		geospatialQueueName, // name
 		false,     // durable
 		false,     // delete when unused
 		false,     // exclusive
