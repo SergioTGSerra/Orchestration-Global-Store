@@ -22,6 +22,8 @@ model Market {
   Orders Order[]
 
   @@map(name: "markets")
+
+  @@unique([name, region], name: "unique_name_region")
 }
 
 model ShipMode {
@@ -92,7 +94,7 @@ model Customer {
   uuid        String   @id  @db.Uuid
   name        String
   segment     String   @db.Uuid
-  postal_code String
+  postal_code String?
   city        String
   state       String   @db.Uuid
   country     String   @db.Uuid

@@ -7,7 +7,7 @@ export class MarketsService {
 
     async findAll(): Promise<any[]> {
         const markets = await this.prisma.market.findMany({});
-        if (!markets) {
+        if (markets.length === 0) {
             throw new NotFoundException('Markets not found');
         }
         return markets;
@@ -36,13 +36,26 @@ export class MarketsService {
         }
         return market.Orders;
     }
-
+    
     async create(createMarketDto: Prisma.MarketCreateInput): Promise<any> {
+        const existingNameAndRegion = await this.prisma.market.findUnique({
+            where: {
+                unique_name_region: {
+                    name: createMarketDto.name,
+                    region: createMarketDto.region,
+                },
+            },
+        });
+    
+        if (existingNameAndRegion) {
+            throw new HttpException('Market name and region already exist', HttpStatus.BAD_REQUEST);
+        }
+    
         return this.prisma.market.create({
             data: createMarketDto,
         });
     }
-
+    
     async update(uuid: string, updateMarketDto: Prisma.MarketUpdateInput): Promise<any> {
         const existingMarket = await this.prisma.market.findUnique({
             where: { uuid: uuid },
@@ -50,12 +63,23 @@ export class MarketsService {
         if (!existingMarket) {
             throw new NotFoundException(`Market not found`);
         }
+        const existingNameAndRegion = await this.prisma.market.findUnique({
+            where: {
+                unique_name_region: {
+                    name: (updateMarketDto.name as Prisma.StringFieldUpdateOperationsInput)?.set || existingMarket.name,
+                    region: (updateMarketDto.region as Prisma.StringFieldUpdateOperationsInput)?.set || existingMarket.region,
+                },
+            },
+        });
+        if (existingNameAndRegion) {
+            throw new HttpException('Market name and region already exist', HttpStatus.BAD_REQUEST);
+        }
         return this.prisma.market.update({
             where: { uuid: uuid },
             data: updateMarketDto,
         });
     }
-
+    
     async delete(uuid: string): Promise<any> {
         const existingMarket = await this.prisma.market.findUnique({
             where: { uuid: uuid },

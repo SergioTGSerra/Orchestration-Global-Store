@@ -18,7 +18,7 @@ export class OrdersController {
 
     @Get(':uuid/products')
     async findProducts(@Param('uuid') uuid: string) {
-        return this.ordersService.findOrderProducts(uuid);
+        return this.ordersService.findProducts(uuid);
     }
 
     @Post()

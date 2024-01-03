@@ -7,7 +7,7 @@ export class CountriesService {
 
     async findAll(): Promise<any[]> {
         const countries = await this.prisma.country.findMany();
-        if (!countries) {
+        if (countries.length === 0) {
             throw new NotFoundException('Countries not found');
         }
         return countries;

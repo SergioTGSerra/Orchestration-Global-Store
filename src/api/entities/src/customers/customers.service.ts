@@ -7,7 +7,7 @@ export class CustomersService {
 
     async findAll(): Promise<any[]> {
         const customers = await this.prisma.customer.findMany();
-        if (!customers) {
+        if (customers.length === 0) {
             throw new NotFoundException('Customers not found');
         }
         return customers;
