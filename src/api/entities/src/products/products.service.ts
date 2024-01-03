@@ -7,7 +7,7 @@ export class ProductsService {
 
     async findAll(): Promise<any[]> {
         const products = await this.prisma.product.findMany();
-        if (!products) {
+        if (products.length === 0) {
             throw new NotFoundException('Products not found');
         }
         return products;

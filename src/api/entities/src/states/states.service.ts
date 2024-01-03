@@ -1,5 +1,7 @@
 import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
+import { CreateStateDto } from './dto/create-state.dto';
+import { UpdateStateDto } from './dto/update-state.dto';
 
 @Injectable()
 export class StatesService {
@@ -37,7 +39,7 @@ export class StatesService {
         return state.Customers;
     }
 
-    async create(createStateDto: Prisma.StateCreateInput): Promise<any> {
+    async create(createStateDto: CreateStateDto): Promise<any> {
         const existingName = await this.prisma.state.findUnique({
             where: { name: createStateDto.name },
         });
@@ -49,7 +51,7 @@ export class StatesService {
         });
     }
 
-    async update(uuid: string, updateStateDto: Prisma.StateUpdateInput): Promise<any> {
+    async update(uuid: string, updateStateDto: UpdateStateDto): Promise<any> {
         const existingState = await this.prisma.state.findUnique({
             where: { uuid: uuid },
         });

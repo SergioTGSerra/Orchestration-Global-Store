@@ -57,21 +57,22 @@ export default function PlayersPage({pagea}) {
                 <Table sx={{minWidth: 650}} aria-label="simple table">
                     <TableHead>
                         <TableRow sx={{backgroundColor: "lightgray"}}>
-                            <TableCell component="th" align="left">ID</TableCell>
-                            <TableCell>Market Name</TableCell>
-                            <TableCell>Region</TableCell>
+                            <TableCell component="th" align="left" sx={{ width: '33%' }}>ID</TableCell>
+                            <TableCell component="th" align="center" sx={{ width: '33%' }}>Market Name</TableCell>
+                            <TableCell component="th" align="center" sx={{ width: '33%' }}>Region</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {
                             data ?
-                                data.map((row) => (
+                                data.map((row, index) => (
                                     <TableRow
                                         key={row.uuid}
+                                        sx={{ backgroundColor: index % 2 === 0 ? 'rgba(0, 0, 0, 0.03)' : 'white' }}
                                     >
                                         <TableCell component="td" align="left">{row.uuid} </TableCell>
-                                        <TableCell component="td" scope="row">{row.name} </TableCell>
-                                        <TableCell component="td" scope="row">{row.region} </TableCell>
+                                        <TableCell component="td" scope="row" align="center">{row.name} </TableCell>
+                                        <TableCell component="td" scope="row" align="center">{row.region} </TableCell>
                                     </TableRow>
                                 ))
                                 :

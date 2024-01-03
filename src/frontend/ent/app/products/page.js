@@ -27,38 +27,20 @@ export default function PlayersPage({pagea}) {
         setData(null);
         console.log(`fetching from ${process.env.NEXT_PUBLIC_API_ENTITIES_URL}`);
         try {
-            const response = await fetch('http://localhost:20001/customers');
+            const response = await fetch('http://localhost:20001/products');
             const data = await response.json();
     
-            const segmentPromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/segments/${row.segment}`)
+            const categoryPromises = data.map((row, index) => {
+                return fetch(`http://localhost:20001/categories/${row.category}`)
                     .then(response => response.json())
-                    .then(segmentData => {
-                        row.segment = segmentData.name;
-                        console.log(`Segment promise resolved for index ${index}`);
-                    });
-            });
-    
-            const statePromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/states/${row.state}`)
-                    .then(response => response.json())
-                    .then(stateData => {
-                        row.state = stateData.name;
-                        console.log(`State promise resolved for index ${index}`);
-                    });
-            });
-    
-            const countryPromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/countries/${row.country}`)
-                    .then(response => response.json())
-                    .then(countryData => {
-                        row.country = countryData.name;
-                        console.log(`Country promise resolved for index ${index}`);
+                    .then(categoryData => {
+                        row.category = categoryData.name;
+                        console.log(`Category promise resolved for index ${index}`);
                     });
             });
     
             // Wait for all promises to be resolved before updating the data
-            await Promise.all([...segmentPromises, ...statePromises, ...countryPromises]);
+            await Promise.all(categoryPromises);
     
             if (data !== null) {
                 setMaxDataSize(data.length);
@@ -67,7 +49,7 @@ export default function PlayersPage({pagea}) {
         } catch (error) {
             console.error('Error fetching data:', error);
         }
-    };
+    };    
     
     useEffect(() => {
         fetchData();
@@ -75,19 +57,15 @@ export default function PlayersPage({pagea}) {
      
     return (
         <>
-            <h1 sx={{fontSize: "100px"}}>Customers</h1>
+            <h1 sx={{fontSize: "100px"}}>Products</h1>
 
             <TableContainer component={Paper}>
                 <Table sx={{minWidth: 650}} aria-label="simple table">
                     <TableHead>
                         <TableRow sx={{backgroundColor: "lightgray"}}>
-                            <TableCell component="th" align="left" sx={{ width: '30%' }}>ID</TableCell>
-                            <TableCell component="th" align="center" sx={{ width: '14%' }}>Customer Name</TableCell>
-                            <TableCell component="th" align="center" sx={{ width: '12%' }}>Segment</TableCell>
-                            <TableCell component="th" align="center" sx={{ width: '12%' }}>Postal code</TableCell>
-                            <TableCell component="th" align="center" sx={{ width: '12%' }}>City</TableCell>
-                            <TableCell component="th" align="center" sx={{ width: '12%' }}>State</TableCell>
-                            <TableCell component="th" align="center" sx={{ width: '12%' }}>Country</TableCell>
+                            <TableCell component="th" align="left" sx={{ width: '33%' }}>ID</TableCell>
+                            <TableCell component="th" align="center" sx={{ width: '33%' }}>Product Name</TableCell>
+                            <TableCell component="th" align="center" sx={{ width: '33%' }}>Category</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -100,11 +78,7 @@ export default function PlayersPage({pagea}) {
                                     >
                                         <TableCell component="td" align="left">{row.uuid} </TableCell>
                                         <TableCell component="td" scope="row" align="center">{row.name} </TableCell>
-                                        <TableCell component="td" scope="row" align="center">{row.segment} </TableCell>
-                                        <TableCell component="td" scope="row" align="center">{row.postal_code || "-"} </TableCell>
-                                        <TableCell component="td" scope="row" align="center">{row.city} </TableCell>
-                                        <TableCell component="td" scope="row" align="center">{row.state} </TableCell>
-                                        <TableCell component="td" scope="row" align="center">{ row.country }</TableCell>
+                                        <TableCell component="td" scope="row" align="center">{row.category} </TableCell>
                                     </TableRow>
                                 ))
                                 :

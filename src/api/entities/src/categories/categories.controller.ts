@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
-import { Prisma } from '@prisma/client';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Controller('categories')
 export class CategoriesController {
@@ -22,12 +23,12 @@ export class CategoriesController {
     }
 
     @Post()
-    async create(@Body() createCategoryDto: Prisma.CategoryCreateInput) {
+    async create(@Body() createCategoryDto: CreateCategoryDto) {
         return this.categoriesService.create(createCategoryDto);
     }
 
     @Put(':uuid')
-    async update(@Param('uuid') uuid: string, @Body() updateCategoryDto: Prisma.CategoryUpdateInput) {
+    async update(@Param('uuid') uuid: string, @Body() updateCategoryDto: UpdateCategoryDto) {
         return this.categoriesService.update(uuid, updateCategoryDto);
     }
 

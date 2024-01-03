@@ -7,7 +7,7 @@ export class PrioritiesService {
 
     async findAll(): Promise<any[]> {
         const priorities = await this.prisma.priority.findMany();
-        if (!priorities) {
+        if (priorities.length === 0) {
             throw new NotFoundException('Priorities not found');
         }
         return priorities;
