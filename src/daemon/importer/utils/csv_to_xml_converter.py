@@ -1,8 +1,5 @@
 import xml.dom.minidom as md
 import xml.etree.ElementTree as ET
-import urllib.parse
-import urllib.request
-import json
 
 from utils.csv_reader import CSVReader
 from entities.order import Order
@@ -43,8 +40,6 @@ class CSVtoXMLConverter:
 
             self._reader = CSVReader(self._reader._path, start=start_index, end=end_index)
             xml_parts.append(self.to_xml())
-
-        print(f"XML parts: {len(xml_parts)}")
 
         return xml_parts
 
@@ -206,13 +201,10 @@ class CSVtoXMLConverter:
 
     def to_xml_str(self, num_parts):
         xml_parts = self.divide_csv_and_convert(num_parts)
-        
         pretty_xml_parts = []
-
         for xml_part in xml_parts:
             xml_str = ET.tostring(xml_part, encoding='utf8', method='xml').decode()
             dom = md.parseString(xml_str)
             xml_str_pretty = dom.toprettyxml()
             pretty_xml_parts.append(xml_str_pretty)
-
         return pretty_xml_parts
