@@ -56,29 +56,11 @@ class CSVtoXMLConverter:
             builder=lambda row: Country(row["Country"])
         )
 
-        def get_coordinates(row):
-            encoded_state = urllib.parse.quote(row["State"])
-            response = urllib.request.urlopen(f'https://nominatim.openstreetmap.org/search?format=json&limit=1&state={encoded_state}')
-            data = json.load(response)
-            if data: return data[0]['lat'], data[0]['lon']
-
-            encoded_city = urllib.parse.quote(row["City"])
-            response = urllib.request.urlopen(f'https://nominatim.openstreetmap.org/search?format=json&limit=1&city={encoded_city}')
-            data = json.load(response)
-            if data: return data[0]['lat'], data[0]['lon']
-
-            encoded_country = urllib.parse.quote(row["Country"])
-            response = urllib.request.urlopen(f'https://nominatim.openstreetmap.org/search?format=json&limit=1&country={encoded_country}')
-            data = json.load(response)
-            if data: return data[0]['lat'], data[0]['lon']
-            
-
         # read states
         states = self._reader.read_entities(
             attr="State",
             builder=lambda row: State(
-                name=row["State"],
-                coordinates=get_coordinates(row)
+                name=row["State"]
             )
         )
 
