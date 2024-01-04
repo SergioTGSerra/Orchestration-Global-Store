@@ -59,7 +59,7 @@ def update_entity(entity, coordinates):
         print(f"An error occurred: {e}")
 
 # RabbitMQ
-def connect_to_rabbitmq(max_retries=5, retry_delay=5):
+def connect_to_rabbitmq(max_retries=10, retry_delay=5):
     for attempt in range(1, max_retries + 1):
         try:
             connection_params = pika.URLParameters('amqp://is:is@rabbitmq:5672/is')

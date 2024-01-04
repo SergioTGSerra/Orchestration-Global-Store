@@ -35,7 +35,7 @@ func connectToRabbitMQ() (*amqp.Connection, error) {
     var conn *amqp.Connection
     var err error
 
-    for i := 1; i <= 5; i++ {
+    for i := 1; i <= 10; i++ {
         conn, err = amqp.Dial(rabbitMQURL)
         if err == nil {
 			fmt.Println("Connected to RabbitMQ")
