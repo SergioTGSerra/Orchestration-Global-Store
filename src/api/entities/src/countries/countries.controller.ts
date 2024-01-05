@@ -22,7 +22,7 @@ export class CountriesController {
     }
 
     @Post()
-    async create(@Body() createCountryDto: Prisma.CountryCreateInput) {
+    async create(@Body() createCountryDto: Prisma.CountryCreateInput[]) {
         return this.countriesService.create(createCountryDto);
     }
 

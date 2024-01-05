@@ -9,7 +9,9 @@ export class CategoriesService {
 
 
     async findAll(): Promise<any[]> {
-        const categories = await this.prisma.category.findMany();
+        const categories = await this.prisma.category.findMany({
+            include: { Categories: true },
+        });
         if (categories.length === 0) {
             throw new NotFoundException('Categories not found');
         }
@@ -40,23 +42,26 @@ export class CategoriesService {
         return category.Products;
     }
 
-    async create(createCategoryDto: CreateCategoryDto): Promise<any> {
-        const existingName = await this.prisma.category.findUnique({
-            where: { name: createCategoryDto.name },
-        });
-        if (existingName) {
-            throw new HttpException('Category name already exists', HttpStatus.BAD_REQUEST);
+    async create(createCategoryDto: CreateCategoryDto[]): Promise<any> {
+        let duplicateCategories: string[] = [];
+        for (let i = 0; i < createCategoryDto.length; i++) {
+            const existingCategory = await this.prisma.category.findUnique({
+                where: { name: createCategoryDto[i].name },
+            });
+
+            if (existingCategory) {
+                duplicateCategories.push(createCategoryDto[i].name as string);
+            } else {
+                await this.prisma.category.create({
+                    data: createCategoryDto[i],
+                });
+            }
         }
-        const existingParentCategory = await this.prisma.category.findUnique({
-            where: { uuid: createCategoryDto.father_category },
-        });
-        if (!existingParentCategory) {
-            throw new HttpException('Parent category not found', HttpStatus.NOT_FOUND);
+        if (duplicateCategories.length > 0) {
+            throw new HttpException(`Categories with names ${duplicateCategories.join(', ')} already exist`, HttpStatus.CONFLICT);
         }
-        return this.prisma.category.create({
-            data: createCategoryDto,
-        });
     }
+    
 
     async update(uuid: string, updateCategoryDto: UpdateCategoryDto): Promise<any> {
         const existingCategory = await this.prisma.category.findUnique({
@@ -73,7 +78,7 @@ export class CategoriesService {
                 },
             });
             if (existingName) {
-                throw new HttpException('Category name already exists', HttpStatus.BAD_REQUEST);
+                throw new HttpException('Category name already exists', HttpStatus.CONFLICT);
             }
             const existingParentCategory = await this.prisma.category.findUnique({
                 where: { uuid: updateCategoryDto.father_category as string },

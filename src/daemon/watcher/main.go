@@ -15,7 +15,7 @@ const (
 	rabbitMQURL = "amqp://is:is@rabbitmq:5672/is"
 	entityQueueName = "Entities_Tasks"
 	geospatialQueueName = "Geospatial_Tasks"
-	interval    = 3 * time.Minute
+	interval    = 20 * time.Second
 )
 
 func connectToDatabase() (*sql.DB, error) {

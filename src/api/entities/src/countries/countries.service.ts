@@ -37,17 +37,27 @@ export class CountriesService {
         return country.Customers;
     }
 
-    async create(createCountryDto: Prisma.CountryCreateInput): Promise<any> {
-        const existingName = await this.prisma.country.findUnique({
-            where: { name: createCountryDto.name },
-        });
-        if (existingName) {
-            throw new HttpException('Country name already exists', HttpStatus.BAD_REQUEST);
+    async create(createCountryDto: Prisma.CountryCreateInput[]): Promise<any> {
+        const duplicateCountries: string[] = [];
+        const upsertPromises: Promise<any>[] = [];
+    
+        for (const countryDto of createCountryDto) {
+            upsertPromises.push(
+                this.prisma.country.upsert({
+                    where: { name: countryDto.name },
+                    create: countryDto,
+                    update: countryDto,
+                })
+            );
         }
-        return this.prisma.country.create({
-            data: createCountryDto,
-        });
+    
+        await Promise.all(upsertPromises);
+    
+        if (duplicateCountries.length > 0) {
+            throw new HttpException(`Countries with names ${duplicateCountries.join(', ')} already exist`, HttpStatus.CONFLICT);
+        }
     }
+    
 
     async update(uuid: string, updateCountryDto: Prisma.CountryUpdateInput): Promise<any> {
         const existingCountry = await this.prisma.country.findUnique({
@@ -61,7 +71,7 @@ export class CountriesService {
                 where: { name: updateCountryDto.name as string, NOT: { uuid: uuid } },
             });
             if (existingName) {
-                throw new HttpException('Country name already exists', HttpStatus.BAD_REQUEST);
+                throw new HttpException('Country name already exists', HttpStatus.CONFLICT);
             }
         }
         return this.prisma.country.update({

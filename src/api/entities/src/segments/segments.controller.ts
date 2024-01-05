@@ -22,7 +22,7 @@ export class SegmentsController {
     }
 
     @Post()
-    async create(@Body() createSegmentDto: Prisma.SegmentCreateInput) {
+    async create(@Body() createSegmentDto: Prisma.SegmentCreateInput[]) {
         return this.segmentsService.create(createSegmentDto);
     }
 
