@@ -1,6 +1,7 @@
 import json
 import sys
 import psycopg2
+from flask_cors import CORS, cross_origin
 
 from flask import Flask, request, jsonify
 
@@ -8,6 +9,8 @@ PORT = int(sys.argv[1]) if len(sys.argv) >= 2 else 9000
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
+
+CORS(app)
 
 def connect_to_database():
     try:
@@ -25,6 +28,7 @@ def connect_to_database():
         raise
 
 @app.route('/api/states/<number_of_entities>', methods=['GET'])
+@cross_origin()
 def get_states(number_of_entities):
     try:
         connection = connect_to_database()
@@ -43,7 +47,29 @@ def get_states(number_of_entities):
     except Exception as e:
         return jsonify({"error": str(e)})
     
+@app.route('/api/tile', methods=['GET'])
+@cross_origin()
+def get_tile():
+    try:
+        connection = connect_to_database()
+        cursor = connection.cursor()
+
+        # Return GeoJSON
+        query = "SELECT jsonb_build_object('type', 'FeatureCollection', 'features', jsonb_agg(features.feature)) FROM (SELECT jsonb_build_object('type', 'Feature', 'geometry', ST_AsGeoJSON(s.geom)::jsonb, 'properties', to_jsonb(c) - 'geom' || jsonb_build_object('state_name', s.name)) AS feature FROM customers c INNER JOIN states s ON c.state = s.uuid WHERE s.geom IS NOT NULL AND ST_Intersects(s.geom::geometry(Geometry, 4326), ST_MakeEnvelope(%s, %s, %s, %s, 4326))) features;"
+        cursor.execute(query, (request.args['neLat'], request.args['neLng'], request.args['swLat'], request.args['swLng'],))
+
+        tile = cursor.fetchone()[0]
+
+        cursor.close()
+        connection.close()
+
+        return jsonify(tile)
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+    
 @app.route('/api/state/<state_id>', methods=['PATCH'])
+@cross_origin()
 def update_state(state_id):
     try:
         connection = connect_to_database()
@@ -64,25 +90,5 @@ def update_state(state_id):
     except Exception as e:
         return jsonify({"error": str(e)})
     
-@app.route('/api/tile', methods=['GET'])
-def get_tile():
-    try:
-        connection = connect_to_database()
-        cursor = connection.cursor()
-
-        # Return GeoJSON
-        query = "SELECT jsonb_build_object('type', 'FeatureCollection', 'features', jsonb_agg(features.feature)) FROM (SELECT jsonb_build_object('type', 'Feature', 'geometry', ST_AsGeoJSON(geom)::jsonb, 'properties', to_jsonb(inputs) - 'geom') AS feature FROM (SELECT * FROM states WHERE geom IS NOT NULL AND ST_Intersects(geom::geometry(Geometry, 4326), ST_MakeEnvelope(%s, %s, %s, %s, 4326))) inputs) features"
-        cursor.execute(query, (request.args['neLat'], request.args['neLng'], request.args['swLat'], request.args['swLng'],))
-
-        tile = cursor.fetchone()[0]
-
-        cursor.close()
-        connection.close()
-
-        return jsonify(tile)
-    
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=PORT)
