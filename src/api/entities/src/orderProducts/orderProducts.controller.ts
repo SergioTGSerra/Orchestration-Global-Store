@@ -17,7 +17,7 @@ export class OrderProductsController {
     }
 
     @Post()
-    async create(@Body() createOrderProductsDto: Prisma.OrderProductCreateInput) {
+    async create(@Body() createOrderProductsDto: Prisma.OrderProductUncheckedCreateInput[]) {
         return this.orderProductsService.create(createOrderProductsDto);
     }
 

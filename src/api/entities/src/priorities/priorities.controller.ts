@@ -22,7 +22,7 @@ export class PrioritiesController {
     }
 
     @Post()
-    async create(@Body() createPriorityDto: Prisma.PriorityCreateInput) {
+    async create(@Body() createPriorityDto: Prisma.PriorityCreateInput[]) {
         return this.prioritiesService.create(createPriorityDto);
     }
 

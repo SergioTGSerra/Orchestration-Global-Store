@@ -22,7 +22,7 @@ export class MarketsController {
     }
 
     @Post()
-    async create(@Body() createMarketDto: Prisma.MarketCreateInput) {
+    async create(@Body() createMarketDto: Prisma.MarketCreateInput[]) {
         return this.marketsService.create(createMarketDto);
     }
 

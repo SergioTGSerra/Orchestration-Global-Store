@@ -22,7 +22,7 @@ export class CustomersController {
     }
 
     @Post()
-    async create(@Body() createCustomerDto: Prisma.CustomerCreateInput) {
+    async create(@Body() createCustomerDto: Prisma.CustomerCreateInput[]) {
         return this.customersService.create(createCustomerDto);
     }
 

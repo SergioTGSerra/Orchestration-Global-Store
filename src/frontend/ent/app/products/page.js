@@ -30,18 +30,6 @@ export default function PlayersPage({pagea}) {
             const response = await fetch('http://localhost:20001/products');
             const data = await response.json();
     
-            const categoryPromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/categories/${row.category}`)
-                    .then(response => response.json())
-                    .then(categoryData => {
-                        row.category = categoryData.name;
-                        console.log(`Category promise resolved for index ${index}`);
-                    });
-            });
-    
-            // Wait for all promises to be resolved before updating the data
-            await Promise.all(categoryPromises);
-    
             if (data !== null) {
                 setMaxDataSize(data.length);
                 setData(data.filter((item, index) => Math.floor(index / PAGE_SIZE) === (page - 1)));
@@ -78,7 +66,7 @@ export default function PlayersPage({pagea}) {
                                     >
                                         <TableCell component="td" align="left">{row.uuid} </TableCell>
                                         <TableCell component="td" scope="row" align="center">{row.name} </TableCell>
-                                        <TableCell component="td" scope="row" align="center">{row.category} </TableCell>
+                                        <TableCell component="td" scope="row" align="center">{row.Category.name} </TableCell>
                                     </TableRow>
                                 ))
                                 :

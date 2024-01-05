@@ -37,16 +37,24 @@ export class PrioritiesService {
         return priority.Orders;
     }
 
-    async create(createPriorityDto: Prisma.PriorityCreateInput): Promise<any> {
-        const existingName = await this.prisma.priority.findUnique({
-            where: { name: createPriorityDto.name },
-        });
-        if (existingName) {
-            throw new HttpException('Priority name already exists', HttpStatus.BAD_REQUEST);
+    async create(createPriorityDto: Prisma.PriorityCreateInput[]): Promise<any> {
+        let duplicatePriorities: string[] = [];
+        for (let i = 0; i < createPriorityDto.length; i++) {
+            const existingPriority = await this.prisma.priority.findUnique({
+                where: { name: createPriorityDto[i].name },
+            });
+
+            if (existingPriority) {
+                duplicatePriorities.push(createPriorityDto[i].name as string);
+            } else {
+                await this.prisma.priority.create({
+                    data: createPriorityDto[i],
+                });
+            }
         }
-        return this.prisma.priority.create({
-            data: createPriorityDto,
-        });
+        if (duplicatePriorities.length > 0) {
+            throw new HttpException(`Priorities with names ${duplicatePriorities.join(', ')} already exist`, HttpStatus.CONFLICT);
+        }
     }
 
     async update(uuid: string, updatePriorityDto: Prisma.PriorityUpdateInput): Promise<any> {
@@ -61,7 +69,7 @@ export class PrioritiesService {
                 where: { name: updatePriorityDto.name as string, NOT: { uuid: uuid } },
             });
             if (existingName) {
-                throw new HttpException('Priority name already exists', HttpStatus.BAD_REQUEST);
+                throw new HttpException('Priority name already exists', HttpStatus.CONFLICT);
             }
         }
         return this.prisma.priority.update({

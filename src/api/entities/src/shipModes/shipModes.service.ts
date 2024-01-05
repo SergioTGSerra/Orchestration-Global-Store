@@ -37,17 +37,26 @@ export class ShipModesService {
         return shipMode.Orders;
     }
 
-    async create(createShipModeDto: Prisma.ShipModeCreateInput): Promise<any> {
-        const existingName = await this.prisma.shipMode.findUnique({
-            where: { name: createShipModeDto.name },
-        });
-        if (existingName) {
-            throw new NotFoundException('Ship mode name already exists');
+    async create(createShipModeDto: Prisma.ShipModeCreateInput[]): Promise<any> {
+        const duplicateShipModes: string[] = [];
+        const upsertPromises: Promise<any>[] = [];
+    
+        for (const shipModeDto of createShipModeDto) {
+            upsertPromises.push(
+                this.prisma.shipMode.upsert({
+                    where: { name: shipModeDto.name },
+                    create: shipModeDto,
+                    update: shipModeDto,
+                })
+            );
         }
-        return this.prisma.shipMode.create({
-            data: createShipModeDto,
-        });
+    
+        await Promise.all(upsertPromises);
+        if (duplicateShipModes.length > 0) {
+            throw new HttpException(`Ship modes with names ${duplicateShipModes.join(', ')} already exist`, HttpStatus.CONFLICT);
+        }
     }
+    
 
     async update(uuid: string, updateShipModeDto: Prisma.ShipModeUpdateInput): Promise<any> {
         const existingShipMode = await this.prisma.shipMode.findUnique({
@@ -61,7 +70,7 @@ export class ShipModesService {
                 where: { name: updateShipModeDto.name as string, NOT: { uuid: uuid } },
             });
             if (existingName) {
-                throw new HttpException('Ship mode name already exists', HttpStatus.BAD_REQUEST);
+                throw new HttpException('Ship mode name already exists', HttpStatus.CONFLICT);
             }
         }
         return this.prisma.shipMode.update({
@@ -75,7 +84,7 @@ export class ShipModesService {
             where: { uuid: uuid },
         });
         if (!existingShipMode) {
-            throw new HttpException('Ship mode name already exists', HttpStatus.BAD_REQUEST);
+            throw new HttpException('Ship mode name already exists', HttpStatus.CONFLICT);
         }
         return this.prisma.shipMode.delete({
             where: { uuid: uuid },

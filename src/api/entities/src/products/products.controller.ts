@@ -22,7 +22,7 @@ export class ProductsController {
     }
 
     @Post()
-    async create(@Body() createProductsDto: Prisma.ProductCreateInput) {
+    async create(@Body() createProductsDto: Prisma.ProductCreateInput[]) {
         return this.productsService.create(createProductsDto);
     }
 

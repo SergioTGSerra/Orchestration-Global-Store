@@ -30,45 +30,6 @@ export default function PlayersPage({pagea}) {
         try {
             const response = await fetch('http://localhost:20001/orders');
             const data = await response.json();
-    
-            const shipModePromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/ship-modes/${row.ship_mode}`)
-                    .then(response => response.json())
-                    .then(shipModeData => {
-                        row.ship_mode = shipModeData.name;
-                        console.log(`ShipMode promise resolved for index ${index}`);
-                    });
-            });
-
-            const priorityPromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/priorities/${row.priority}`)
-                    .then(response => response.json())
-                    .then(priorityData => {
-                        row.priority = priorityData.name;
-                        console.log(`Priority promise resolved for index ${index}`);
-                    });
-            });
-    
-            const customerPromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/customers/${row.customer}`)
-                    .then(response => response.json())
-                    .then(customerData => {
-                        row.customer = customerData.name;
-                        console.log(`Customer promise resolved for index ${index}`);
-                    });
-            });
-
-            const marketPromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/markets/${row.market}`)
-                    .then(response => response.json())
-                    .then(marketData => {
-                        row.market = marketData;
-                        console.log(`Market promise resolved for index ${index}`);
-                    });
-            });
-    
-            // Wait for all promises to be resolved before updating the data
-            await Promise.all([...shipModePromises, ...priorityPromises, ...customerPromises, ...marketPromises]);
 
             if (data !== null) {
                 setMaxDataSize(data.length);
@@ -113,11 +74,11 @@ export default function PlayersPage({pagea}) {
                                         <TableCell component="td" align="left">{ row.uuid }</TableCell>
                                         <TableCell component="td" scope="row" align="center">{ new Date(row.order_date).toLocaleDateString() }</TableCell>
                                         <TableCell component="td" scope="row" align="center">{ new Date(row.ship_date).toLocaleDateString() }</TableCell>
-                                        <TableCell component="td" scope="row" align="center">{ row.priority }</TableCell>
-                                        <TableCell component="td" scope="row" align="center">{ row.ship_mode }</TableCell>
+                                        <TableCell component="td" scope="row" align="center">{ row.Priority.name }</TableCell>
+                                        <TableCell component="td" scope="row" align="center">{ row.ShipMode.name }</TableCell>
                                         <TableCell component="td" scope="row" align="center">{ row.shipping_cost }</TableCell>
-                                        <TableCell component="td" scope="row" align="center">{ row.customer }</TableCell>
-                                        <TableCell component="td" scope="row" align="center">{ row.market.name } - { row.market.region }</TableCell>
+                                        <TableCell component="td" scope="row" align="center">{ row.Customer.name }</TableCell>
+                                        <TableCell component="td" scope="row" align="center">{ row.Market.name } - { row.Market.region }</TableCell>
                                         <TableCell component="td" scope="row" align="center">
                                         <Link href={`/orders/${row.uuid}`}>
                                         <div style={{ color: 'blue', textDecoration: 'underline', cursor: 'pointer' }}>

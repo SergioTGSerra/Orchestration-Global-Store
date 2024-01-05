@@ -22,7 +22,7 @@ export class ShipModesController {
     }
 
     @Post()
-    async create(@Body() createShipModeDto: Prisma.ShipModeCreateInput) {
+    async create(@Body() createShipModeDto: Prisma.ShipModeCreateInput[]) {
         return this.shipModesService.create(createShipModeDto);
     }
 

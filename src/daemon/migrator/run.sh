@@ -2,8 +2,8 @@
 
 OUTPUT_BIN="main"
 
-go mod init main
-go mod tidy
+# go mod init main
+# go mod tidy
 
 go mod download
 

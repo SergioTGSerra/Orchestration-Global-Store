@@ -52,7 +52,6 @@ type OrderProduct struct {
 	ProductRef string `xml:"id,attr"`
 }
 	
-
 type Shipping struct {
 	Date string `xml:"date,attr"`
 	Mode string `xml:"mode,attr"`
@@ -108,6 +107,19 @@ type Category struct {
 	ParentCategoryID string `xml:"parent_category_id,attr"`
 }
 
+func waitForAPI() {
+    apiURL := "http://api-entities:8080/ping"  // Altere o endpoint conforme necessário
+    
+    for i := 1; i <= 10; i++ {
+        resp, err := http.Get(apiURL)
+        if err == nil && resp.StatusCode == http.StatusOK {
+            fmt.Println("API is ready")
+            break
+        }
+        fmt.Printf("Failed to connect to API (attempt %d): %v\n", i, err)
+        time.Sleep(20 * time.Second)
+    }
+}
 
 func connectToDatabase() (*sql.DB, error) {
 	db, err := sql.Open("postgres", dbURL)
@@ -158,12 +170,8 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
 
     go func() {
         for d := range msgs {
-            // Converte []byte para string
             xmlString := string(d.Body)
 
-			fmt.Println("New message received!")
-
-            // Cria um leitor de string
             reader := strings.NewReader(xmlString)
 
             var store Store
@@ -174,6 +182,7 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
                 return
             }
 
+			var markets []map[string]interface{}
 			for _, market := range store.Markets {
 				uuid := stringToUUID(market.Name + market.Region)
 				data := map[string]interface{}{
@@ -181,41 +190,47 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
 					"name":   market.Name,
 					"region": market.Region,
 				}
-				sendToApi("markets", data)
+				markets = append(markets, data)
 			}
+			sendToApi("markets", markets)
 
+			var ship_modes []map[string]interface{}
 			for _, shipping := range store.Orders {
 				uuid := stringToUUID(shipping.Shipping.Mode)
 				data := map[string]interface{}{
 					"uuid": uuid.String(),
 					"name": shipping.Shipping.Mode,
 				}
-				sendToApi("ship-modes", data)
+				ship_modes = append(ship_modes, data)
 			}
+			sendToApi("ship-modes", ship_modes)
 
+			var priorities []map[string]interface{}
 			for _, priority := range store.Orders {
 				uuid := stringToUUID(priority.Priority)
 				data := map[string]interface{}{
 					"uuid": uuid.String(),
 					"name": priority.Priority,
 				}
-				sendToApi("priorities", data)
+				priorities = append(priorities, data)
 			}
+			sendToApi("priorities", priorities)
 
+			var segments []map[string]interface{}
 			for _, segment := range store.Segments {
 				uuid := stringToUUID(segment.Name)
 				data := map[string]interface{}{
 					"uuid": uuid.String(),
 					"name": segment.Name,
 				}
-				sendToApi("segments", data)
+				segments = append(segments, data)
 			}
+			sendToApi("segments", segments)
 
+			var categories []map[string]interface{}
 			for _, category := range store.Categories {
 				uuid:= stringToUUID(category.Name)
-				
 				var data map[string]interface{}
-			
 				if category.ParentCategoryID != "" {
 					category.ParentCategoryID = stringToUUID(getCategoryID(category.ParentCategoryID, store)).String()
 					data = map[string]interface{}{
@@ -229,29 +244,33 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
 						"name": category.Name,
 					}
 				}
-			
-				sendToApi("categories", data)
+				categories = append(categories, data)
 			}
+			sendToApi("categories", categories)
 			
-
+			var countries []map[string]interface{}
 			for _, country := range store.Countries {
 				uuid := stringToUUID(country.Name).String()
 				data := map[string]interface{}{
 					"uuid": uuid,
 					"name": country.Name,
 				}
-				sendToApi("countries", data)
+				countries = append(countries, data)
 			}
+			sendToApi("countries", countries)
 
+			var states []map[string]interface{}
 			for _, state := range store.States {
 				uuid := stringToUUID(state.Name).String()
 				data := map[string]interface{}{
 					"uuid": uuid,
 					"name": state.Name,
 				}
-				sendToApi("states", data)
+				states = append(states, data)
 			}
+			sendToApi("states", states)
 
+			var customers []map[string]interface{}
 			for _, customer := range store.Customers {
 				uuid := stringToUUID(customer.ID).String()
 				customer.SegmentRef = stringToUUID(getSegmentID(customer.SegmentRef, store)).String()
@@ -266,9 +285,11 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
 					"state": customer.Address.StateRef,
 					"country": customer.Address.CountryRef,
 				}
-				sendToApi("customers", data)
+				customers = append(customers, data)
 			}
+			sendToApi("customers", customers)
 
+			var products []map[string]interface{}
 			for _, product := range store.Products {
 				uuid := stringToUUID(product.ID).String()
 				product.CategoryRef = stringToUUID(getCategoryID(product.CategoryRef, store)).String()
@@ -277,9 +298,11 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
 					"name": product.Name,
 					"category": product.CategoryRef,
 				}
-				sendToApi("products", data)
+				products = append(products, data)
 			}
+			sendToApi("products", products)
 
+			var orders  []map[string]interface{}
 			for _, order := range store.Orders {
 				uuid := stringToUUID(order.ID).String()
 				order.CustomerRef = stringToUUID(order.CustomerRef).String()
@@ -298,9 +321,11 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
 					"shipping_cost": order.Shipping.Cost,
 					"ship_date": shippingDate,
 				}
-				sendToApi("orders", data)
+				orders = append(orders, data)
 			}
+			sendToApi("orders", orders)
 
+			var ordersProducts []map[string]interface{}
 			for _, order_products := range store.Orders {
 				order_products.ID = stringToUUID(order_products.ID).String()
 				for _, order_product := range order_products.OrderProducts {
@@ -313,12 +338,12 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
 						"discount": order_product.Discount,
 						"profit": order_product.Profit,
 					}
-					sendToApi("order-products", data)
+					ordersProducts = append(ordersProducts, data)
 				}
 			}
+			sendToApi("order-products", ordersProducts)
         }
     }()
-
     <-forever
     return nil
 }
@@ -326,7 +351,6 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
 func stringToUUID(input string) (uuid.UUID) {
 	namespace := uuid.Nil
 	hash := uuid.NewMD5(namespace, []byte(input))
-
 	return hash
 }
 
@@ -375,17 +399,15 @@ func getMarketID(id string, store Store) (string) {
 	return ""
 }
 
-func sendToApi(endpoint string, data interface{}) error {
-
+func sendToApi(endpoint string, data []map[string]interface{}) error {
 	apiURL := "http://api-entities:8080/" + endpoint
-	// Convert data to JSON
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		fmt.Println("Error encoding JSON:", err)
 		return err
 	}
 
-	// Make a POST request
 	resp, err := http.Post(apiURL, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Println("Error making POST request:", err)
@@ -393,41 +415,29 @@ func sendToApi(endpoint string, data interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	// Check the response status
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println("Unexpected response on " + endpoint + " status:", resp.Status)
-		return fmt.Errorf("unexpected response status: %s", resp.Status)
-	}
+	fmt.Println(endpoint + " created successfully")
 
-	// Read the response body
-	var result map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		fmt.Println("Error decoding JSON response:", err)
-		return err
-	}
-
-	// Print the result
-	fmt.Println("API Response:", result)
 	return nil
 }
 
 func main() {
-	conn, err := connectToRabbitMQ()
-	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
-	}
-	defer conn.Close()
+    waitForAPI()
 
-	ch, err := conn.Channel()
-	if err != nil {
-		log.Fatalf("Failed to open a channel: %v", err)
-	}
-	defer ch.Close()
+    conn, err := connectToRabbitMQ()
+    if err != nil {
+        log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+    }
+    defer conn.Close()
 
-	err = receiveFromRabbitMQ(ch)
-	if err != nil {
-		log.Fatalf("Failed to recive from RabbitMQ: %v", err)
-	}
+    ch, err := conn.Channel()
+    if err != nil {
+        log.Fatalf("Failed to open a channel: %v", err)
+    }
+    defer ch.Close()
 
+    err = receiveFromRabbitMQ(ch)
+    if err != nil {
+        log.Fatalf("Failed to receive from RabbitMQ: %v", err)
+    }
 }
+

@@ -37,23 +37,23 @@ export class MarketsService {
         return market.Orders;
     }
     
-    async create(createMarketDto: Prisma.MarketCreateInput): Promise<any> {
-        const existingNameAndRegion = await this.prisma.market.findUnique({
-            where: {
-                unique_name_region: {
-                    name: createMarketDto.name,
-                    region: createMarketDto.region,
-                },
-            },
-        });
-    
-        if (existingNameAndRegion) {
-            throw new HttpException('Market name and region already exist', HttpStatus.BAD_REQUEST);
+    async create(createMarketDto: Prisma.MarketCreateInput[]): Promise<any> {
+        let duplicateMarkets: string[] = [];
+        for (let i = 0; i < createMarketDto.length; i++) {
+            const existingMarket = await this.prisma.market.findUnique({
+                where: { unique_name_region: { name: createMarketDto[i].name, region: createMarketDto[i].region } },
+            });
+            if (existingMarket) {
+                duplicateMarkets.push(createMarketDto[i].name as string);
+            } else {
+                await this.prisma.market.create({
+                    data: createMarketDto[i],
+                });
+            }
         }
-    
-        return this.prisma.market.create({
-            data: createMarketDto,
-        });
+        if (duplicateMarkets.length > 0) {
+            throw new HttpException(`Markets with names ${duplicateMarkets.join(', ')} already exist`, HttpStatus.CONFLICT);
+        }
     }
     
     async update(uuid: string, updateMarketDto: Prisma.MarketUpdateInput): Promise<any> {
@@ -72,7 +72,7 @@ export class MarketsService {
             },
         });
         if (existingNameAndRegion) {
-            throw new HttpException('Market name and region already exist', HttpStatus.BAD_REQUEST);
+            throw new HttpException('Market name and region already exist', HttpStatus.CONFLICT);
         }
         return this.prisma.market.update({
             where: { uuid: uuid },

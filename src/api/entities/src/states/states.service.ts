@@ -39,17 +39,27 @@ export class StatesService {
         return state.Customers;
     }
 
-    async create(createStateDto: CreateStateDto): Promise<any> {
-        const existingName = await this.prisma.state.findUnique({
-            where: { name: createStateDto.name },
-        });
-        if (existingName) {
-            throw new HttpException('State name already exists', HttpStatus.BAD_REQUEST);
+    async create(createStateDto: CreateStateDto[]): Promise<any> {
+        const duplicateStates: string[] = [];
+        const upsertPromises: Promise<any>[] = [];
+    
+        for (const stateDto of createStateDto) {
+            upsertPromises.push(
+                this.prisma.state.upsert({
+                    where: { name: stateDto.name },
+                    create: stateDto,
+                    update: stateDto,
+                })
+            );
         }
-        return this.prisma.state.create({
-            data: createStateDto,
-        });
+    
+        await Promise.all(upsertPromises);
+    
+        if (duplicateStates.length > 0) {
+            throw new HttpException(`States with names ${duplicateStates.join(', ')} already exist`, HttpStatus.CONFLICT);
+        }
     }
+    
 
     async update(uuid: string, updateStateDto: UpdateStateDto): Promise<any> {
         const existingState = await this.prisma.state.findUnique({
@@ -63,7 +73,7 @@ export class StatesService {
                 where: { name: updateStateDto.name as string },
             });
             if (existingName) {
-                throw new HttpException('State name already exists', HttpStatus.BAD_REQUEST);
+                throw new HttpException('State name already exists', HttpStatus.CONFLICT);
             }
         }
         return this.prisma.state.update({

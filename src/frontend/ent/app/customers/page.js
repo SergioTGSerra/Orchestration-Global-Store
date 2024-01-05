@@ -30,36 +30,6 @@ export default function PlayersPage({pagea}) {
             const response = await fetch('http://localhost:20001/customers');
             const data = await response.json();
     
-            const segmentPromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/segments/${row.segment}`)
-                    .then(response => response.json())
-                    .then(segmentData => {
-                        row.segment = segmentData.name;
-                        console.log(`Segment promise resolved for index ${index}`);
-                    });
-            });
-    
-            const statePromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/states/${row.state}`)
-                    .then(response => response.json())
-                    .then(stateData => {
-                        row.state = stateData.name;
-                        console.log(`State promise resolved for index ${index}`);
-                    });
-            });
-    
-            const countryPromises = data.map((row, index) => {
-                return fetch(`http://localhost:20001/countries/${row.country}`)
-                    .then(response => response.json())
-                    .then(countryData => {
-                        row.country = countryData.name;
-                        console.log(`Country promise resolved for index ${index}`);
-                    });
-            });
-    
-            // Wait for all promises to be resolved before updating the data
-            await Promise.all([...segmentPromises, ...statePromises, ...countryPromises]);
-    
             if (data !== null) {
                 setMaxDataSize(data.length);
                 setData(data.filter((item, index) => Math.floor(index / PAGE_SIZE) === (page - 1)));
@@ -100,11 +70,11 @@ export default function PlayersPage({pagea}) {
                                     >
                                         <TableCell component="td" align="left">{row.uuid} </TableCell>
                                         <TableCell component="td" scope="row" align="center">{row.name} </TableCell>
-                                        <TableCell component="td" scope="row" align="center">{row.segment} </TableCell>
+                                        <TableCell component="td" scope="row" align="center">{row.Segment.name} </TableCell>
                                         <TableCell component="td" scope="row" align="center">{row.postal_code || "-"} </TableCell>
                                         <TableCell component="td" scope="row" align="center">{row.city} </TableCell>
-                                        <TableCell component="td" scope="row" align="center">{row.state} </TableCell>
-                                        <TableCell component="td" scope="row" align="center">{ row.country }</TableCell>
+                                        <TableCell component="td" scope="row" align="center">{row.State.name} </TableCell>
+                                        <TableCell component="td" scope="row" align="center">{ row.Country.name }</TableCell>
                                     </TableRow>
                                 ))
                                 :

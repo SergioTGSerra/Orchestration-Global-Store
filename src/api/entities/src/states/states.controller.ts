@@ -24,7 +24,7 @@ export class StatesController {
     }
 
     @Post()
-    async create(@Body() createStatesDto: CreateStateDto) {
+    async create(@Body() createStatesDto: CreateStateDto[]) {
         return this.statesService.create(createStatesDto);
     }
 

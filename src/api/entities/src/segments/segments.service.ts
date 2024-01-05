@@ -37,16 +37,24 @@ export class SegmentsService {
         return segment.Customers;
     }
 
-    async create(createSegmentDto: Prisma.SegmentCreateInput): Promise<any> {
-        const existingName = await this.prisma.segment.findUnique({
-            where: { name: createSegmentDto.name },
-        });
-        if (existingName) {
-            throw new HttpException('Segment name already exists', HttpStatus.BAD_REQUEST);
+    async create(createSegmentDto: Prisma.SegmentCreateInput[]): Promise<any> {
+        let duplicateSegments: string[] = [];
+        for (let i = 0; i < createSegmentDto.length; i++) {
+            const existingSegment = await this.prisma.segment.findUnique({
+                where: { name: createSegmentDto[i].name },
+            });
+
+            if (existingSegment) {
+                duplicateSegments.push(createSegmentDto[i].name as string);
+            } else {
+                await this.prisma.segment.create({
+                    data: createSegmentDto[i],
+                });
+            }
         }
-        return this.prisma.segment.create({
-            data: createSegmentDto,
-        });
+        if (duplicateSegments.length > 0) {
+            throw new HttpException(`Segments with names ${duplicateSegments.join(', ')} already exist`, HttpStatus.CONFLICT);
+        }
     }
 
     async update(uuid: string, updateSegmentDto: Prisma.SegmentUpdateInput): Promise<any> {
@@ -61,7 +69,7 @@ export class SegmentsService {
                 where: { name: updateSegmentDto.name as string, NOT: { uuid: uuid } },
             });
             if (existingName) {
-                throw new HttpException('Segment name already exists', HttpStatus.BAD_REQUEST);
+                throw new HttpException('Segment name already exists', HttpStatus.CONFLICT);
             }
         }
         return this.prisma.segment.update({
