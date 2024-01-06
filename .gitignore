@@ -49,5 +49,5 @@ Thumbs.db
 *.wmv
 
 # Ignore XML files produced by the importer
-/volumes/xml/*.xml
+docker/volumes/xml/*.xml
 /.env
