@@ -62,6 +62,8 @@ class CSVHandler(FileSystemEventHandler):
         # once the conversion is done, we should update the converted_documents table
         for file_data in convert_csv_to_xml(csv_path, xml_path, num_xml_parts_str):
             store_xml_file_in_database(file_data[0], file_data[1])
+        
+        print(f"Conversion done for {csv_path} at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
 
     async def get_converted_files(self):
         db_connection = DBConnection()
