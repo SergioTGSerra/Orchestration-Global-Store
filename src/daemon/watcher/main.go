@@ -11,90 +11,112 @@ import (
 )
 
 const (
-	dbURL       = "postgres://is:is@db-xml:5432/is?sslmode=disable"
-	rabbitMQURL = "amqp://is:is@rabbitmq:5672/is"
-	entityQueueName = "Entities_Tasks"
+	dbURL             = "postgres://is:is@db-xml:5432/is?sslmode=disable"
+	rabbitMQURL       = "amqp://is:is@rabbitmq:5672/is"
+	entityQueueName    = "Entities_Tasks"
 	geospatialQueueName = "Geospatial_Tasks"
-	interval    = 20 * time.Second
+	interval           = 20 * time.Second
+	maxAttempts        = 20
 )
 
+// Message struct to simplify publishing logic
+type Message struct {
+	ID   string
+	Data string
+}
+
 func connectToDatabase() (*sql.DB, error) {
-	db, err := sql.Open("postgres", dbURL)
-	fmt.Println("Connected to database")
-	if err != nil {
-		return nil, err
+	var db *sql.DB
+	var err error
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		db, err = sql.Open("postgres", dbURL)
+		if err == nil {
+			fmt.Println("Connected to database successfully")
+			return db, nil
+		}
+		time.Sleep(2 * time.Second)
 	}
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
+
+	return nil, fmt.Errorf("Failed to connect to database after %d attempts", maxAttempts)
 }
 
-func connectToRabbitMQ() (*amqp.Connection, error) {
-    var conn *amqp.Connection
-    var err error
+func connectToRabbitMQ() (*amqp.Connection, *amqp.Channel, error) {
+	var conn *amqp.Connection
+	var err error
 
-    for i := 1; i <= 10; i++ {
-        conn, err = amqp.Dial(rabbitMQURL)
-        if err == nil {
+	for i := 1; i <= maxAttempts; i++ {
+		conn, err = amqp.Dial(rabbitMQURL)
+		if err == nil {
 			fmt.Println("Connected to RabbitMQ")
-            break
-        }
+			ch, err := conn.Channel()
+			if err != nil {
+				return nil, nil, fmt.Errorf("Error creating RabbitMQ channel: %s", err)
+			}
+			return conn, ch, nil
+		}
+		time.Sleep(3 * time.Second)
+	}
 
-        fmt.Printf("Failed to connect to RabbitMQ (attempt %d): %v\n", i, err)
-        time.Sleep(3 * time.Second)
-    }
-
-    return conn, err
+	return nil, nil, fmt.Errorf("Failed to connect to RabbitMQ after %d attempts", maxAttempts)
 }
 
-func publishToRabbitMQ(ch *amqp.Channel, message string, queueName string) error {
+func declareQueue(ch *amqp.Channel, queueName string) error {
+	_, err := ch.QueueDeclare(
+		queueName, // name
+		false,     // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
+	)
+	if err != nil {
+		return fmt.Errorf("Error declaring RabbitMQ queue %s: %s", queueName, err)
+	}
+	return nil
+}
+
+func publishToRabbitMQ(ch *amqp.Channel, message Message, queueName string) error {
 	err := ch.Publish(
-		"",       // exchange
+		"",        // exchange
 		queueName, // routing key
-		false,    // mandatory
-		false,    // immediate
+		false,     // mandatory
+		false,     // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:        []byte(message),
+			Body:        []byte(message.Data),
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to publish message to RabbitMQ: %v", err)
+		return fmt.Errorf("Failed to publish message to RabbitMQ: %v", err)
 	}
-	fmt.Println("Published message to RabbitMQ")
 	return nil
 }
 
 func checkAndPublishNewEntities(db *sql.DB, ch *amqp.Channel) error {
-	var newXMLs []string
-
 	query := "SELECT id, xml FROM imported_documents WHERE watched = false"
 
 	rows, err := db.Query(query)
 	if err != nil {
-		return fmt.Errorf("failed to execute query: %v", err)
+		return fmt.Errorf("Failed to execute query: %v", err)
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
-		var xmlData , id string
-		err = rows.Scan(&id, &xmlData)
+		var message Message
+		err = rows.Scan(&message.ID, &message.Data)
 		if err != nil {
-			return fmt.Errorf("failed to scan row: %v", err)
+			return fmt.Errorf("Failed to scan row: %v", err)
 		}
-		fmt.Printf("Found new XML document with id: %s\n", id)
-		
-		publishToRabbitMQ(ch, xmlData, entityQueueName)
-		publishToRabbitMQ(ch, "New geospatial data to be updated!", geospatialQueueName)
 
-		query := "update imported_documents set watched = true where id = $1"
-		db.Exec(query, id)
-		
+		publishToRabbitMQ(ch, message, entityQueueName)
+		publishToRabbitMQ(ch, Message{Data: "New geospatial data to be updated!"}, geospatialQueueName)
+
+		fmt.Printf("Published new XML document with id: %s\n", message.ID)
+
+		updateQuery := "UPDATE imported_documents SET watched = true WHERE id = $1"
+		db.Exec(updateQuery, message.ID)
 	}
-
-	fmt.Printf("Found %d new XML documents\n", len(newXMLs))
 
 	return nil
 }
@@ -102,60 +124,39 @@ func checkAndPublishNewEntities(db *sql.DB, ch *amqp.Channel) error {
 func main() {
 	db, err := connectToDatabase()
 	if err != nil {
-		log.Fatalf("Error connecting to the database: %s\n", err)
+		log.Fatalf("Error connecting to database: %s", err)
 	}
+	defer db.Close()
 
-	conn, err := connectToRabbitMQ()
+	conn, ch, err := connectToRabbitMQ()
 	if err != nil {
-		log.Fatalf("Error connecting to RabbitMQ: %s\n", err)
+		log.Fatalf("Error connecting to RabbitMQ: %s", err)
 	}
 	defer conn.Close()
-
-	ch, err := conn.Channel()
-	if err != nil {
-		log.Fatalf("Error creating RabbitMQ channel: %s\n", err)
-	}
 	defer ch.Close()
 
-	_, err = ch.QueueDeclare(
-		entityQueueName, // name
-		false,     // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
+	err = declareQueue(ch, entityQueueName)
 	if err != nil {
-		log.Fatalf("Error declaring RabbitMQ queue: %s\n", err)
+		log.Fatalf("Error declaring RabbitMQ queue: %s", err)
 	}
 
-	_, err = ch.QueueDeclare(
-		geospatialQueueName, // name
-		false,     // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
+	err = declareQueue(ch, geospatialQueueName)
 	if err != nil {
-		log.Fatalf("Error declaring RabbitMQ queue: %s\n", err)
+		log.Fatalf("Error declaring RabbitMQ queue: %s", err)
 	}
 
 	err = checkAndPublishNewEntities(db, ch)
 	if err != nil {
-		log.Fatalf("Error checking and publishing new entities: %s\n", err)
+		log.Fatalf("Error checking and publishing new entities: %s", err)
 	}
 
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			err := checkAndPublishNewEntities(db, ch)
-			if err != nil {
-				log.Printf("Error checking and publishing new entities: %s\n", err)
-			}
+	for range ticker.C {
+		err := checkAndPublishNewEntities(db, ch)
+		if err != nil {
+			log.Printf("Error checking and publishing new entities: %s", err)
 		}
 	}
 }
