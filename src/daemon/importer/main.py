@@ -27,21 +27,12 @@ def convert_csv_to_xml(in_path, out_path, num_parts):
     return file_data
 
 def store_xml_file_in_database(xml_path, data):
-    db = DBConnection()
-    db.connect()
-    db.execute_query("INSERT INTO imported_documents (file_name, xml) VALUES (%s, %s)", (xml_path, data))
-    db.disconnect()  
+    db_connection = DBConnection()
+    db_connection.execute_query("INSERT INTO imported_documents (file_name, xml) VALUES (%s, %s)", (xml_path, data))
 
 def store_csv_file_in_database(csv_path):
-    db = DBConnection()
-    db.connect()
-    db.execute_query("INSERT INTO converted_documents (src, file_size, dst) VALUES (%s, %s, %s)", (csv_path, os.path.getsize(csv_path), csv_path,))
-    db.disconnect()
-
-def read_xml_file(xml_path):
-    with open(xml_path, 'r') as file:
-        content = file.read()
-    return content
+    db_connection = DBConnection()
+    db_connection.execute_query("INSERT INTO converted_documents (src, file_size, dst) VALUES (%s, %s, %s)", (csv_path, os.path.getsize(csv_path), csv_path,))
 
 class CSVHandler(FileSystemEventHandler):
     def __init__(self, input_path, output_path):
@@ -73,10 +64,8 @@ class CSVHandler(FileSystemEventHandler):
             store_xml_file_in_database(file_data[0], file_data[1])
 
     async def get_converted_files(self):
-        db = DBConnection()
-        db.connect()
-        result = db.execute_query_with_return("SELECT src FROM converted_documents", ())
-        db.disconnect()
+        db_connection = DBConnection()
+        result = db_connection.execute_query_with_return("SELECT src FROM converted_documents", ())
         return result
 
     def on_created(self, event):
