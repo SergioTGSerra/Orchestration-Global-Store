@@ -48,7 +48,15 @@ class CSVHandler(FileSystemEventHandler):
     async def convert_csv(self, csv_path):
         # here we avoid converting the same file again
         # check converted files in the database
-        if csv_path in await self.get_converted_files():
+
+        result = await self.get_converted_files()
+        if result:
+            file_path = result[0][0]
+        else:
+            file_path = ""
+
+        if csv_path in file_path:
+            print(f"File {csv_path} already converted.")
             return
                 
         store_csv_file_in_database(csv_path)
