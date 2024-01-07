@@ -3,7 +3,7 @@ import sys
 import psycopg2
 from flask_cors import CORS, cross_origin
 
-from flask import Flask, request, jsonify
+from flask import Flask, g, request, jsonify
 
 PORT = int(sys.argv[1]) if len(sys.argv) >= 2 else 9000
 
@@ -24,23 +24,33 @@ def connect_to_database():
         return connection
 
     except Exception as e:
-        print(f"Erro ao conectar ao banco de dados: {str(e)}")
+        print(f"Error connecting to database: {str(e)}")
         raise
+
+def get_db():
+    if 'db' not in g:
+        g.db = connect_to_database()
+    return g.db
+
+@app.teardown_appcontext
+def close_db(error):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 @app.route('/api/states/<number_of_entities>', methods=['GET'])
 @cross_origin()
 def get_states(number_of_entities):
     try:
-        connection = connect_to_database()
+        connection = get_db()
         cursor = connection.cursor()
 
-        query = "SELECT * FROM states WHERE geom IS NULL LIMIT %s"
+        query = "SELECT uuid, name, geom FROM states WHERE geom IS NULL LIMIT %s"
         cursor.execute(query, (number_of_entities,))
 
         states = cursor.fetchall()
 
         cursor.close()
-        connection.close()
 
         return jsonify(states)
 
@@ -51,7 +61,7 @@ def get_states(number_of_entities):
 @cross_origin()
 def get_tile():
     try:
-        connection = connect_to_database()
+        connection = get_db()
         cursor = connection.cursor()
 
         # Return GeoJSON
@@ -61,7 +71,6 @@ def get_tile():
         tile = cursor.fetchone()[0]
 
         cursor.close()
-        connection.close()
 
         return jsonify(tile)
 
@@ -72,7 +81,7 @@ def get_tile():
 @cross_origin()
 def update_state(state_id):
     try:
-        connection = connect_to_database()
+        connection = get_db()
         cursor = connection.cursor()
 
         geom_json = json.dumps(request.json['geom'])
@@ -83,9 +92,8 @@ def update_state(state_id):
         connection.commit()
 
         cursor.close()
-        connection.close()
 
-        return jsonify({"message": "Estado atualizado com sucesso!"})
+        return jsonify({"message": "State updated successfully"})
 
     except Exception as e:
         return jsonify({"error": str(e)})
