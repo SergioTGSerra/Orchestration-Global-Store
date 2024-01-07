@@ -14,144 +14,86 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/streadway/amqp"
+	"app/entities"
 )
 
 const (
 	dbURL       = "postgres://is:is@db-rel:5432/is?sslmode=disable"
 	rabbitMQURL = "amqp://is:is@rabbitmq:5672/is"
-	queueName   = "Entities_Tasks"
+	entityQueueName   = "Entities_Tasks"
+	geospatialQueueName = "Geospatial_Tasks"
 	interval    = 5 * time.Minute
+	maxAttempts = 20
+	apiUrl = "http://api-entities:8080/"
 )
 
-type Store struct {
-	Orders    []Order    `xml:"Orders>Order"`
-	Products  []Product  `xml:"Products>Product"`
-	Markets   []Market   `xml:"Markets>Market"`
-	Customers []Customer `xml:"Customers>Customer"`
-	Segments  []Segment  `xml:"Segments>Segment"`
-	States    []State    `xml:"States>State"`
-	Countries []Country  `xml:"Countries>Country"`
-	Categories []Category `xml:"Categories>Category"`
-}
-
-type Order struct {
-	ID         string    `xml:"id,attr"`
-	Date       string    `xml:"date,attr"`
-	Priority    string    `xml:"priority,attr"`
-	CustomerRef string  `xml:"customer_ref,attr"`
-	MarketRef  string    `xml:"market_ref,attr"`
-	Shipping   Shipping  `xml:"Shipping"`
-	OrderProducts   []OrderProduct `xml:"Products>Product"`
-}
-
-type OrderProduct struct {
-	Quantity int     `xml:"quantity,attr"`
-    Sales    float64 `xml:"sales,attr"`
-    Discount float64 `xml:"discount,attr"`
-    Profit   float64 `xml:"profit,attr"`
-	ProductRef string `xml:"id,attr"`
-}
-	
-type Shipping struct {
-	Date string `xml:"date,attr"`
-	Mode string `xml:"mode,attr"`
-	Cost float64 `xml:"cost,attr"`
-}
-
-type Product struct {
-	ID           string `xml:"id,attr"`
-	Name         string `xml:"name,attr"`
-	CategoryRef  string `xml:"category_ref,attr"`
-}
-
-type Market struct {
-	ID     string `xml:"id,attr"`
-	Name   string `xml:"name,attr"`
-	Region string `xml:"region,attr"`
-}
-
-type Customer struct {
-	ID         string  `xml:"id,attr"`
-	Name       string  `xml:"name,attr"`
-	SegmentRef string `xml:"segment_ref,attr"`
-	Address    Address `xml:"Address"`
-}
-
-type Address struct {
-	CountryRef string `xml:"country_ref,attr"`
-	StateRef   string `xml:"state_ref,attr"`
-	City       string `xml:"city,attr"`
-	PostalCode string `xml:"postal_code,attr"`
-}
-
-type Segment struct {
-	ID   string `xml:"id,attr"`
-	Name string `xml:"name,attr"`
-}
-
-type State struct {
-	ID   string `xml:"id,attr"`
-	Name string `xml:"name,attr"`
-	Lat  string `xml:"lat,attr"`
-	Lon  string `xml:"lon,attr"`
-}
-
-type Country struct {
-	ID   string `xml:"id,attr"`
-	Name string `xml:"name,attr"`
-}
-
-type Category struct {
-	ID                string `xml:"id,attr"`
-	Name              string `xml:"name,attr"`
-	ParentCategoryID string `xml:"parent_category_id,attr"`
-}
-
-func waitForAPI() {
-    apiURL := "http://api-entities:8080/ping"  // Altere o endpoint conforme necessário
+func connectToApi() (error) {
+	apiURL := apiUrl + "ping"
     
-    for i := 1; i <= 10; i++ {
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
         resp, err := http.Get(apiURL)
         if err == nil && resp.StatusCode == http.StatusOK {
-            fmt.Println("API is ready")
-            break
+            fmt.Println("Connected to api successfully")
+            return nil
         }
-        fmt.Printf("Failed to connect to API (attempt %d): %v\n", i, err)
         time.Sleep(20 * time.Second)
     }
+
+	return fmt.Errorf("Failed to connect to API after %d attempts", maxAttempts)
 }
 
 func connectToDatabase() (*sql.DB, error) {
-	db, err := sql.Open("postgres", dbURL)
-	fmt.Println("Connected to database")
-	if err != nil {
-		return nil, err
+	var db *sql.DB
+	var err error
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		db, err = sql.Open("postgres", dbURL)
+		if err == nil {
+			fmt.Println("Connected to database successfully")
+			return db, nil
+		}
+		time.Sleep(2 * time.Second)
 	}
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
+
+	return nil, fmt.Errorf("Failed to connect to database after %d attempts", maxAttempts)
 }
 
-func connectToRabbitMQ() (*amqp.Connection, error) {
-    var conn *amqp.Connection
-    var err error
+func connectToRabbitMQ() (*amqp.Connection, *amqp.Channel, error) {
+	var conn *amqp.Connection
+	var err error
 
-    for i := 1; i <= 10; i++ {
-        conn, err = amqp.Dial(rabbitMQURL)
-        if err == nil {
+	for i := 1; i <= maxAttempts; i++ {
+		conn, err = amqp.Dial(rabbitMQURL)
+		if err == nil {
 			fmt.Println("Connected to RabbitMQ")
-            break
-        }
-        fmt.Printf("Failed to connect to RabbitMQ (attempt %d): %v\n", i, err)
-        time.Sleep(3 * time.Second)
-    }
+			ch, err := conn.Channel()
+			if err != nil {
+				return nil, nil, fmt.Errorf("Error creating RabbitMQ channel: %s", err)
+			}
+			return conn, ch, nil
+		}
+		time.Sleep(3 * time.Second)
+	}
 
-    return conn, err
+	return nil, nil, fmt.Errorf("Failed to connect to RabbitMQ after %d attempts", maxAttempts)
 }
 
-func receiveFromRabbitMQ(ch *amqp.Channel) error {
+func declareQueue(ch *amqp.Channel, queueName string) error {
+	_, err := ch.QueueDeclare(
+		queueName, // name
+		false,     // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
+	)
+	if err != nil {
+		return fmt.Errorf("Error declaring RabbitMQ queue %s: %s", queueName, err)
+	}
+	return nil
+}
+
+func receiveFromRabbitMQ(ch *amqp.Channel, queueName string) error {
     msgs, err := ch.Consume(
         queueName, // queue
         "",        // consumer
@@ -169,12 +111,12 @@ func receiveFromRabbitMQ(ch *amqp.Channel) error {
     forever := make(chan bool)
 
     go func() {
-        for d := range msgs {
-            xmlString := string(d.Body)
+        for msg := range msgs {
+            xmlString := string(msg.Body)
 
             reader := strings.NewReader(xmlString)
 
-            var store Store
+            var store entities.Store
             decoder := xml.NewDecoder(reader)
             err := decoder.Decode(&store)
             if err != nil {
@@ -354,7 +296,7 @@ func stringToUUID(input string) (uuid.UUID) {
 	return hash
 }
 
-func getCategoryID(id string, store Store) (string) {
+func getCategoryID(id string, store entities.Store) (string) {
 	for _, category := range store.Categories {             
 		if category.ID == id {
 			return category.Name
@@ -363,7 +305,7 @@ func getCategoryID(id string, store Store) (string) {
 	return ""
 }
 
-func getSegmentID(id string, store Store) (string) {
+func getSegmentID(id string, store entities.Store) (string) {
 	for _, segment := range store.Segments {
 		if segment.ID == id {
 			return segment.Name
@@ -372,7 +314,7 @@ func getSegmentID(id string, store Store) (string) {
 	return ""
 }
 
-func getCountryID(id string, store Store) (string) {
+func getCountryID(id string, store entities.Store) (string) {
 	for _, country := range store.Countries {
 		if country.ID == id {
 			return country.Name
@@ -381,7 +323,7 @@ func getCountryID(id string, store Store) (string) {
 	return ""
 }
 
-func getStateID(id string, store Store) (string) {
+func getStateID(id string, store entities.Store) (string) {
 	for _, state := range store.States {
 		if state.ID == id {
 			return state.Name
@@ -390,7 +332,7 @@ func getStateID(id string, store Store) (string) {
 	return ""
 }
 
-func getMarketID(id string, store Store) (string) {
+func getMarketID(id string, store entities.Store) (string) {
 	for _, market := range store.Markets {
 		if market.ID == id {
 			return market.Name + market.Region
@@ -400,7 +342,7 @@ func getMarketID(id string, store Store) (string) {
 }
 
 func sendToApi(endpoint string, data []map[string]interface{}) error {
-	apiURL := "http://api-entities:8080/" + endpoint
+	apiURL := apiUrl + endpoint
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -421,23 +363,42 @@ func sendToApi(endpoint string, data []map[string]interface{}) error {
 }
 
 func main() {
-    waitForAPI()
+	err := connectToApi()
+	if err != nil {
+		log.Fatalf("Error connecting to API: %s", err)
+	}
 
-    conn, err := connectToRabbitMQ()
-    if err != nil {
-        log.Fatalf("Failed to connect to RabbitMQ: %v", err)
-    }
-    defer conn.Close()
+	db, err := connectToDatabase()
+	if err != nil {
+		log.Fatalf("Error connecting to database: %s", err)
+	}
+	defer db.Close()
 
-    ch, err := conn.Channel()
-    if err != nil {
-        log.Fatalf("Failed to open a channel: %v", err)
-    }
-    defer ch.Close()
+	conn, ch, err := connectToRabbitMQ()
+	if err != nil {
+		log.Fatalf("Error connecting to RabbitMQ: %s", err)
+	}
+	defer conn.Close()
+	defer ch.Close()
 
-    err = receiveFromRabbitMQ(ch)
-    if err != nil {
-        log.Fatalf("Failed to receive from RabbitMQ: %v", err)
-    }
+	err = declareQueue(ch, entityQueueName)
+	if err != nil {
+		log.Fatalf("Error declaring RabbitMQ queue: %s", err)
+	}
+
+	err = declareQueue(ch, geospatialQueueName)
+	if err != nil {
+		log.Fatalf("Error declaring RabbitMQ queue: %s", err)
+	}
+
+	ch, err = conn.Channel()
+	if err != nil {
+		log.Fatalf("Failed to open a channel: %v", err)
+	}
+	defer ch.Close()
+
+	err = receiveFromRabbitMQ(ch, entityQueueName)
+	if err != nil {
+		log.Fatalf("Failed to receive from RabbitMQ: %v", err)
+	}
 }
-
