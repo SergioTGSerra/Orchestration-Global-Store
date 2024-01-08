@@ -284,10 +284,28 @@ func receiveFromRabbitMQ(ch *amqp.Channel, queueName string) error {
 				}
 			}
 			sendToApi("order-products", ordersProducts)
+			publishToRabbitMQ(ch, "Entities ready for coordinates update!", geospatialQueueName)
         }
     }()
     <-forever
     return nil
+}
+
+func publishToRabbitMQ(ch *amqp.Channel, message string, queueName string) error {
+	err := ch.Publish(
+		"",        // exchange
+		queueName, // routing key
+		false,     // mandatory
+		false,     // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(message),
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("Failed to publish message to RabbitMQ: %v", err)
+	}
+	return nil
 }
 
 func stringToUUID(input string) (uuid.UUID) {
