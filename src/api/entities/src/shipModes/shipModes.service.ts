@@ -38,20 +38,20 @@ export class ShipModesService {
     }
 
     async create(createShipModeDto: Prisma.ShipModeCreateInput[]): Promise<any> {
-        const duplicateShipModes: string[] = [];
-        const upsertPromises: Promise<any>[] = [];
-    
-        for (const shipModeDto of createShipModeDto) {
-            upsertPromises.push(
-                this.prisma.shipMode.upsert({
-                    where: { name: shipModeDto.name },
-                    create: shipModeDto,
-                    update: shipModeDto,
-                })
-            );
+        let duplicateShipModes: string[] = [];
+        for (let i = 0; i < createShipModeDto.length; i++) {
+            const existingShipMode = await this.prisma.shipMode.findUnique({
+                where: { name: createShipModeDto[i].name },
+            });
+
+            if (existingShipMode) {
+                duplicateShipModes.push(createShipModeDto[i].name as string);
+            } else {
+                await this.prisma.shipMode.create({
+                    data: createShipModeDto[i],
+                });
+            }
         }
-    
-        await Promise.all(upsertPromises);
         if (duplicateShipModes.length > 0) {
             throw new HttpException(`Ship modes with names ${duplicateShipModes.join(', ')} already exist`, HttpStatus.CONFLICT);
         }

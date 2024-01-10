@@ -18,6 +18,7 @@ export class OrdersService {
                     select: {
                         uuid: true,
                         name: true,
+                        region: true,
                     },
                 },
                 ShipMode: {
