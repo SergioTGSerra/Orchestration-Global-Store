@@ -5,9 +5,9 @@ import { ObjectMarker } from "./ObjectMarker";
 
 function ObjectMarkersGroup() {
 
-    async function fetchData() {
+    async function fetchData(bounds) {
         try {
-            const response = await fetch(`http://localhost:20002/api/tile?neLat=90&neLng=180&swLat=-90&swLng=-180`);
+            const response = await fetch(`http://localhost:20002/api/tile?neLat=${bounds.getNorthEast().lat}&neLng=${bounds.getNorthEast().lng}&swLat=${bounds.getSouthWest().lat}&swLng=${bounds.getSouthWest().lng}`);
             const responseData = await response.json();
             setData(responseData.features);
             console.log(responseData);
@@ -37,8 +37,9 @@ function ObjectMarkersGroup() {
 
     /* Updates the data for the current bounds */
     useEffect(() => {
-        console.log(`> getting data for bounds`, bounds);
-        fetchData();
+        console.log(`> getting data for bounds north east`, bounds.getNorthEast().lat, bounds.getNorthEast().lng);
+        console.log(`> getting data for bounds south west`, bounds.getSouthWest().lat, bounds.getSouthWest().lng);
+        fetchData(bounds);
     }, [bounds]);
 
     // Update geom when data changes
