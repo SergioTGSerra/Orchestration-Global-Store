@@ -20,16 +20,16 @@ export function ObjectMarker({geoJSON}) {
         <Marker
             position={coordinates}
             icon={leafletIcon({
-                iconUrl: "https://cdn-icons-png.flaticon.com/512/805/805409.png",
-                iconRetinaUrl: "https://cdn-icons-png.flaticon.com/512/805/805409.png",
-                iconSize: point(50, 50),
+                iconUrl: "https://cdn-icons-png.flaticon.com/128/3001/3001764.png",
+                iconRetinaUrl: "https://cdn-icons-png.flaticon.com/128/3001/3001764.png",
+                iconSize: point(30, 30),
             })}
         >
             <Popup>
                 <List dense={true}>
                     <ListItem>
                         <ListItemIcon>
-                            <Avatar alt={name} src={"https://cdn-icons-png.flaticon.com/512/805/805409.png"}/>
+                            <Avatar alt={name} src={"https://cdn-icons-png.flaticon.com/128/3001/3001764.png"}/>
                         </ListItemIcon>
                         <ListItemText primary={name}/>
                     </ListItem>
