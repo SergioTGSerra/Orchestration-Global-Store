@@ -26,8 +26,42 @@ function OrdersByPriority() {
               console.error('Error fetching orders:', error);
           }
       }
+
+      async function fetchOrdersGQL() {
+        try {
+          const response = await fetch('http://localhost:20003/graphql', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                query: `
+                  query Get_orders {
+                    get_orders {
+                        order_id
+                        order_date
+                        shipped_date
+                        ship_mode
+                        customer_name
+                        shipping_cost
+                        priority
+                    }
+                }
+              
+                `
+            })
+          });
+        
+          const data = await response.json();
+          setGQLData(data.data.get_orders);
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        }
+      }
   
       fetchOrders();
+      fetchOrdersGQL();
   }, []);
 
   return (
@@ -68,8 +102,7 @@ function OrdersByPriority() {
         {gqlData ? (
           <ul>
             {gqlData.map((data) => (
-              <li key={data.team}>{data.team}</li>
-            ))}
+              <li key={data.order_id}>id: {data.order_id} Date: {data.order_date} Priority: {data.priority} Customer: {data.customer_name}</li>))}
           </ul>
         ) : selectedCountry ? (
           <CircularProgress />

@@ -26,8 +26,42 @@ function orderCustomerWithGeoInfo() {
               console.error('Error fetching orders:', error);
           }
       }
+
+      async function fetchOrdersGQL() {
+        try {
+          const response = await fetch('http://localhost:20003/graphql', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                query: `
+                query Get_order_details {
+                  get_order_details {
+                      order_id
+                      order_date
+                      shipped_date
+                      ship_mode
+                      customer_name
+                      postal_code
+                      state_name
+                      state_geometry
+                  }
+              }
+                `
+            })
+          });
+        
+          const data = await response.json();
+          setGQLData(data.data.get_order_details);
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        }
+      }
   
       fetchOrders();
+      fetchOrdersGQL();
   }, []);
 
   return (
@@ -68,8 +102,9 @@ function orderCustomerWithGeoInfo() {
         {gqlData ? (
           <ul>
             {gqlData.map((data) => (
-              <li key={data.team}>{data.team}</li>
-            ))}
+              <div>
+                <li key={data.order_id}>Order date: {data.order_date} Shipped date: {data.shipped_date} Ship mode: {data.ship_mode} Customer name: {data.customer_name}</li>
+              </div>            ))}
           </ul>
         ) : selectedCountry ? (
           <CircularProgress />

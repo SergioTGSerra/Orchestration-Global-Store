@@ -5,8 +5,10 @@ import { Diversity1 } from "@mui/icons-material";
 
 function ordersByCost() {
   const [selectedMarket, setSelectedMarket] = useState("");
+  const [selectedMarketGraph, setSelectedMarketGraph] = useState("");
   const [procData, setProcData] = useState(null);
   const [markets, setMarkets] = useState(null);
+  const [marketsGql, setMarketsGql] = useState(null);
   const [gqlData, setGQLData] = useState(null);
 
   useEffect(() => {
@@ -51,7 +53,68 @@ function ordersByCost() {
           console.error('Error fetching orders:', error);
       }
     }
+
+    async function fetchMarkets() {
+      try {
+          const response = await fetch('http://localhost:20003/graphql', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+              body: JSON.stringify({
+                  query: `
+                  query Get_markets {
+                    get_markets {
+                        market_id
+                        market_name
+                    }
+                }                
+                  `
+              })
+          });
+          const data = await response.json();
+          setMarketsGql(data.data.get_markets);
+      }
+      catch (error) {
+          console.error('Error fetching orders:', error);
+      }
+    }
+
+    async function fetchOrdersGQL() {
+      try {
+        const response = await fetch('http://localhost:20003/graphql', {
+          method: 'POST',
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+              query: `
+              query Get_orders_by_market {
+                get_orders_by_market(market: "${selectedMarket}") {
+                    order_id
+                    order_date
+                    shipped_date
+                    ship_mode
+                    customer_name
+                    shipping_cost
+                    priority
+                }
+            }
+              `
+          })
+        });
+
+        const data = await response.json();
+        setGQLData(data.data.get_orders_by_market);  
+      } catch (error) {
+          console.error('Error fetching orders:', error);
+      }
+    }
     fetchOrders();
+    fetchMarkets();
+    fetchOrdersGQL();
   }
 
   return (
@@ -127,7 +190,7 @@ function ordersByCost() {
         {gqlData ? (
           <ul>
             {gqlData.map((data) => (
-              <li key={data.team}>{data.team}</li>
+              <li key={data.order_id}>id: {data.order_id} Date: {data.order_date} Priority: {data.priority}</li>
             ))}
           </ul>
         ) : selectedMarket ? (
