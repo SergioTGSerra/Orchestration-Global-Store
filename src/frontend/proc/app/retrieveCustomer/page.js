@@ -26,8 +26,41 @@ function Customer_Address() {
               console.error('Error fetching orders:', error);
           }
       }
+
+      async function fetchOrdersGQL() {
+        try {
+          const response = await fetch('http://localhost:20003/graphql', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                query: `
+                query Get_customers {
+                    get_customers {
+                        customer_id
+                        customer_name
+                        postal_code
+                        city
+                        country_name
+                        state_name
+                        state_geometry
+                    }
+                }
+                `
+            })
+          });
+
+          const data = await response.json();
+          setGQLData(data.data.get_customers);
+        }catch (error) {
+          console.error('Error fetching orders:', error);
+        }
+      }
   
       fetchOrders();
+      fetchOrdersGQL();
   }, []);
 
   return (
@@ -68,7 +101,9 @@ function Customer_Address() {
         {gqlData ? (
           <ul>
             {gqlData.map((data) => (
-              <li key={data.team}>{data.team}</li>
+              <div>
+                <li key={data.customer_id}>id: {data.customer_id} Name: {data.customer_name} City: {data.city} Country: {data.country_name}</li>
+              </div>
             ))}
           </ul>
         ) : selectedCountry ? (

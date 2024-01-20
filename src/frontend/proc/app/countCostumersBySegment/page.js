@@ -26,8 +26,37 @@ function countCostumersBySegment() {
               console.error('Error fetching orders:', error);
           }
       }
-  
+
+      async function fetchOrdersGQL() {
+        try {
+          const response = await fetch('http://localhost:20003/graphql', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                query: `
+                    query Get_segment_counts {
+                        get_segment_counts {
+                            segment_name
+                            customer_count
+                        }
+                    }
+                `
+            })
+          });
+        
+          const data = await response.json();
+          setGQLData(data.data.get_segment_counts);
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        }
+    }
+    
+
       fetchOrders();
+      fetchOrdersGQL();
   }, []);
 
   return (
@@ -68,7 +97,9 @@ function countCostumersBySegment() {
         {gqlData ? (
           <ul>
             {gqlData.map((data) => (
-              <li key={data.team}>{data.team}</li>
+              <div>
+                <li>Name: {data.segment_name} Number of Customers: {data.customer_count}</li>
+              </div>
             ))}
           </ul>
         ) : selectedCountry ? (
