@@ -32,29 +32,7 @@ function ordersByCost() {
       }
     }
 
-    fetchMarkets();
-  }, []);
-
-  if(selectedMarket){
-    async function fetchOrders() {
-      try {
-          const response = await fetch('http://localhost:20004/api/ordersByCost/' + selectedMarket);
-          const data = await response.json();
-
-          // Verificando a estrutura dos dados
-          const orderArray = data.Orders && data.Orders.Order;
-
-          if (orderArray) {
-            setProcData(orderArray);
-          } else {
-              console.error('Orders not found in the API response:', data);
-          }
-      } catch (error) {
-          console.error('Error fetching orders:', error);
-      }
-    }
-
-    async function fetchMarkets() {
+    async function fetchMarketsGQL() {
       try {
           const response = await fetch('http://localhost:20003/graphql', {
             method: 'POST',
@@ -81,6 +59,32 @@ function ordersByCost() {
       }
     }
 
+    fetchMarkets();
+    fetchMarketsGQL();
+  }, []);
+
+  if(selectedMarket){
+    async function fetchOrders() {
+      try {
+          const response = await fetch('http://localhost:20004/api/ordersByCost/' + selectedMarket);
+          const data = await response.json();
+
+          // Verificando a estrutura dos dados
+          const orderArray = data.Orders && data.Orders.Order;
+
+          if (orderArray) {
+            setProcData(orderArray);
+          } else {
+              console.error('Orders not found in the API response:', data);
+          }
+      } catch (error) {
+          console.error('Error fetching orders:', error);
+      }
+    }
+    fetchOrders();
+  }
+
+  if(selectedMarketGraph){
     async function fetchOrdersGQL() {
       try {
         const response = await fetch('http://localhost:20003/graphql', {
@@ -92,7 +96,7 @@ function ordersByCost() {
           body: JSON.stringify({
               query: `
               query Get_orders_by_market {
-                get_orders_by_market(market: "${selectedMarket}") {
+                get_orders_by_market(market: "${selectedMarketGraph}") {
                     order_id
                     order_date
                     shipped_date
@@ -112,8 +116,7 @@ function ordersByCost() {
           console.error('Error fetching orders:', error);
       }
     }
-    fetchOrders();
-    fetchMarkets();
+
     fetchOrdersGQL();
   }
 
@@ -148,6 +151,32 @@ function ordersByCost() {
                 markets.map((market) => (
                   <MenuItem key={market.id} value={market.id}>
                     {market.name}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </Box>
+        <br/>
+        <Box>
+          <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>Options</h2>
+          <FormControl fullWidth>
+            <InputLabel id="countries-select-label">Market</InputLabel>
+            <Select
+              labelId="countries-select-label"
+              id="demo-simple-select"
+              value={selectedMarketGraph}
+              label="Market"
+              onChange={(e, v) => {
+                setSelectedMarketGraph(e.target.value);
+              }}
+            >
+              <MenuItem value={""}>
+                <em>None</em>
+              </MenuItem>
+              {marketsGql &&
+                marketsGql.map((market) => (
+                  <MenuItem key={market.market_id} value={market.market_id}>
+                    {market.market_name}
                   </MenuItem>
                 ))}
             </Select>
@@ -193,7 +222,7 @@ function ordersByCost() {
               <li key={data.order_id}>id: {data.order_id} Date: {data.order_date} Priority: {data.priority}</li>
             ))}
           </ul>
-        ) : selectedMarket ? (
+        ) : selectedMarketGraph ? (
           <CircularProgress />
         ) : (
           "--"
